@@ -4,7 +4,7 @@ import { Home } from "@/pages/Home";
 import { About } from "@/pages/About";
 import { Projects } from "@/pages/Projects";
 import { ProjectDetail } from "@/pages/ProjectsDetail";
-import { ComingSoon } from "@/pages/ComingSoon";
+import { Contact } from "@/pages/Contact";
 import { useTheme } from "./context/ThemeContext";
 import { Toaster } from "sonner";
 
@@ -20,16 +20,7 @@ export function App() {
           <Route path="about" element={<About />} />
           <Route path="projects" element={<Projects />} />
           <Route path="projects/:slug" element={<ProjectDetail />} />
-          <Route
-            path="contact"
-            element={
-              <ComingSoon
-                eyebrow="Contact"
-                heading="Coming soon."
-                description="A way to reach me directly is on its way — check back shortly."
-              />
-            }
-          />
+          <Route path="contact" element={<Contact />} />
         </Route>
       </Routes>
     </BrowserRouter>

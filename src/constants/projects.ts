@@ -21,6 +21,9 @@ export type Project = {
   };
 };
 
+const MOBILE_PLACEHOLDER = (n: number) =>
+  `https://placehold.co/450x800/1a1a1a/ffffff?text=Screen+${n}`;
+
 export const PROJECTS: Project[] = [
   {
     slug: "mitra-hasanah",
@@ -28,7 +31,7 @@ export const PROJECTS: Project[] = [
     private: false,
     card: {
       title: "KSPPS Berkah Mitra Hasanah",
-      coverCard: mitraHasanahClient.gambar1,
+      coverCard: mitraHasanahClient.gambar3,
       shortDesc:
         "Portal web koperasi syariah berbasis React yang terintegrasi penuh dengan dashboard admin — produk, galeri, dan berita update realtime dari API.",
     },
@@ -94,5 +97,30 @@ export const PROJECTS: Project[] = [
       },
     },
   },
-  // mobile projects — tambah di sini ntar
+
+  {
+    slug: "mitra-hasanah-mobile",
+    category: "mobile",
+    private: false,
+    card: {
+      title: "KSPPS Mitra Hasanah — Mobile",
+      coverCard: MOBILE_PLACEHOLDER(1),
+      shortDesc:
+        "Aplikasi mobile koperasi syariah untuk nasabah — cek produk, upload bukti transaksi, dan baca berita langsung dari genggaman.",
+    },
+    details: {
+      title: "KSPPS Mitra Hasanah — Mobile",
+      images: Array.from({ length: 6 }, (_, i) => MOBILE_PLACEHOLDER(i + 1)),
+      description:
+        "Versi mobile dari ekosistem KSPPS Berkah Mitra Hasanah, dibangun dengan React Native (Expo) dan di-build via EAS Build. Terhubung ke backend yang sama dengan web client — nasabah bisa melihat produk simpanan & pembiayaan, mengakses galeri event, membaca berita terbaru, hingga upload bukti setoran langsung dari kamera. UI adaptif portrait dengan desain full-screen.",
+      demo: {
+        icon: "link",
+        href: null,
+      },
+      repo: {
+        icon: "github",
+        href: "https://github.com/userrrrnn77/mobile-anak-usm",
+      },
+    },
+  },
 ];

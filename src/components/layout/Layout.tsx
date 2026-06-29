@@ -5,7 +5,7 @@ import { NetworkBackground } from "@/components/layout/NetworkBackground";
 
 export function Layout() {
   return (
-    <div className="relative flex min-h-screen flex-col">
+    <div className="relative flex min-h-screen flex-col ">
       <NetworkBackground />
       <Navbar />
       <main className="flex-1">

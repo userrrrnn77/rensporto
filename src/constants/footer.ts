@@ -41,9 +41,14 @@ export const FOOTER_COLUMNS: FooterColumn[] = [
   },
   {
     title: "Based In",
-    links: [{ label: "Semarang, Indonesia", href: "https://maps.app.goo.gl/R7bJsTRRDBAsVo978", external: true }],
+    links: [
+      {
+        label: "Semarang, Indonesia",
+        href: "https://maps.app.goo.gl/R7bJsTRRDBAsVo978",
+        external: true,
+      },
+    ],
   },
 ];
 
-export const FOOTER_NOTE =
-  "Built with React, Tailwind CSS, and a lot of coffee.";
+export const FOOTER_NOTE = "Built with React, and a lot of coffee.";

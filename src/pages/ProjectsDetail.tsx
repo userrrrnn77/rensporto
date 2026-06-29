@@ -1,6 +1,6 @@
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowLeft, ExternalLink, Lock } from "lucide-react";
+import { ArrowLeft, ExternalLink, Lock, Download } from "lucide-react";
 import { FaGithub } from "react-icons/fa";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -31,7 +31,8 @@ export function ProjectDetail() {
     );
   }
 
-  const { details, private: isPrivate } = project;
+  const { details, private: isPrivate, category } = project;
+  const isMobile = category === "mobile";
 
   function handleDemoClick() {
     if (!details.demo?.href) {
@@ -90,12 +91,22 @@ export function ProjectDetail() {
 
         {/* CTA buttons */}
         <div className="flex flex-wrap items-center gap-2 pt-1">
-          <button
-            onClick={handleDemoClick}
-            className="flex h-9 items-center gap-1.5 rounded-sm bg-gray-1000 px-4 font-sans text-sm font-medium text-background-100 transition-opacity hover:opacity-85">
-            <ExternalLink className="h-3.5 w-3.5" strokeWidth={2} />
-            {details.demo?.href ? "Live demo" : "No demo"}
-          </button>
+          {isMobile ? (
+            // Mobile: download button kalau ada href, otherwise toast
+            <button
+              onClick={handleDemoClick}
+              className="flex h-9 items-center gap-1.5 rounded-sm bg-gray-1000 px-4 font-sans text-sm font-medium text-background-100 transition-opacity hover:opacity-85">
+              <Download className="h-3.5 w-3.5" strokeWidth={2} />
+              {details.demo?.href ? "Download APK" : "Not available"}
+            </button>
+          ) : (
+            <button
+              onClick={handleDemoClick}
+              className="flex h-9 items-center gap-1.5 rounded-sm bg-gray-1000 px-4 font-sans text-sm font-medium text-background-100 transition-opacity hover:opacity-85">
+              <ExternalLink className="h-3.5 w-3.5" strokeWidth={2} />
+              {details.demo?.href ? "Live demo" : "No demo"}
+            </button>
+          )}
           {details.repo?.href && (
             <a
               href={details.repo.href}
@@ -109,7 +120,7 @@ export function ProjectDetail() {
         </div>
       </motion.div>
 
-      {/* Main image */}
+      {/* Image area — layout beda: web = full width, mobile = portrait gallery */}
       <motion.div
         initial="hidden"
         animate="visible"
@@ -119,44 +130,60 @@ export function ProjectDetail() {
           delay: 0.1,
           ease: [0.175, 0.885, 0.32, 1.1],
         }}
-        className="mt-8 overflow-hidden rounded-md border border-gray-alpha-400 bg-gray-100">
-        <img
-          src={details.images[activeImage]}
-          alt={`${details.title} screenshot ${activeImage + 1}`}
-          className="h-full w-full object-cover"
-        />
-      </motion.div>
-
-      {/* Thumbnail strip */}
-      {details.images.length > 1 && (
-        <motion.div
-          initial="hidden"
-          animate="visible"
-          variants={fadeUp}
-          transition={{
-            duration: 0.4,
-            delay: 0.13,
-            ease: [0.175, 0.885, 0.32, 1.1],
-          }}
-          className="mt-3 flex gap-2 overflow-x-auto pb-1">
-          {details.images.map((img: string, i: number) => (
-            <button
-              key={i}
-              onClick={() => setActiveImage(i)}
-              className={`relative h-16 w-24 shrink-0 overflow-hidden rounded-sm border-2 transition-colors ${
-                i === activeImage
-                  ? "border-blue-700"
-                  : "border-gray-alpha-300 hover:border-gray-alpha-500"
-              }`}>
+        className="mt-8">
+        {isMobile ? (
+          // Mobile layout: row of portrait screenshots, active one larger
+          <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-thin">
+            {details.images.map((img: string, i: number) => (
+              <button
+                key={i}
+                onClick={() => setActiveImage(i)}
+                className={`relative shrink-0 overflow-hidden rounded-md border-2 transition-all duration-300 ${
+                  i === activeImage
+                    ? "h-120 w-55 border-blue-700 shadow-modal"
+                    : "h-80 w-36.75 border-gray-alpha-300 opacity-60 hover:opacity-80"
+                }`}>
+                <img
+                  src={img}
+                  alt={`${details.title} screen ${i + 1}`}
+                  className="h-full w-full object-cover"
+                />
+              </button>
+            ))}
+          </div>
+        ) : (
+          // Web layout: full width main image + thumbnail strip
+          <>
+            <div className="overflow-hidden rounded-md border border-gray-alpha-400 bg-gray-100">
               <img
-                src={img}
-                alt={`Thumbnail ${i + 1}`}
+                src={details.images[activeImage]}
+                alt={`${details.title} screenshot ${activeImage + 1}`}
                 className="h-full w-full object-cover"
               />
-            </button>
-          ))}
-        </motion.div>
-      )}
+            </div>
+            {details.images.length > 1 && (
+              <div className="mt-3 flex gap-2 overflow-x-auto pb-1 scrollbar-thin">
+                {details.images.map((img: string, i: number) => (
+                  <button
+                    key={i}
+                    onClick={() => setActiveImage(i)}
+                    className={`relative h-16 w-24 shrink-0 overflow-hidden rounded-sm border-2 transition-colors ${
+                      i === activeImage
+                        ? "border-blue-700"
+                        : "border-gray-alpha-300 hover:border-gray-alpha-500"
+                    }`}>
+                    <img
+                      src={img}
+                      alt={`Thumbnail ${i + 1}`}
+                      className="h-full w-full object-cover"
+                    />
+                  </button>
+                ))}
+              </div>
+            )}
+          </>
+        )}
+      </motion.div>
 
       {/* Description */}
       <motion.div

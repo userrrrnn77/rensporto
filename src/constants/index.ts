@@ -5,3 +5,4 @@ export * from "./footer";
 export * from "./hero";
 export * from "./features";
 export * from "./about";
+export * from "./comments";
