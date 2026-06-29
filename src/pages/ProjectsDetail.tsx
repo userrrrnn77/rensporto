@@ -2,22 +2,61 @@ import { useParams, Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowLeft, ExternalLink, Lock, Download } from "lucide-react";
 import { FaGithub } from "react-icons/fa";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
-import { PROJECTS } from "@/constants/projects";
+import { projectsApi, type Project } from "@/lib/api/projects";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 12 },
   visible: { opacity: 1, y: 0 },
 };
 
+// ─── Skeleton ─────────────────────────────────────────────────────────────────
+
+function DetailSkeleton() {
+  return (
+    <section className="mx-auto max-w-300 px-6 py-20 sm:py-28">
+      <div className="h-4 w-12 animate-pulse rounded-sm bg-gray-alpha-200" />
+      <div className="mt-6 space-y-3">
+        <div className="h-8 w-2/3 animate-pulse rounded-sm bg-gray-alpha-200" />
+        <div className="h-4 w-1/3 animate-pulse rounded-sm bg-gray-alpha-100" />
+      </div>
+      <div className="mt-8 aspect-video w-full animate-pulse rounded-md bg-gray-alpha-100" />
+      <div className="mt-10 space-y-3 border-t border-gray-alpha-400 pt-10">
+        <div className="h-4 w-32 animate-pulse rounded-sm bg-gray-alpha-200" />
+        <div className="h-3 w-full animate-pulse rounded-sm bg-gray-alpha-100" />
+        <div className="h-3 w-4/5 animate-pulse rounded-sm bg-gray-alpha-100" />
+        <div className="h-3 w-3/4 animate-pulse rounded-sm bg-gray-alpha-100" />
+      </div>
+    </section>
+  );
+}
+
+// ─── Page ─────────────────────────────────────────────────────────────────────
+
 export function ProjectDetail() {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
-  const project = PROJECTS.find((p) => p.slug === slug);
+  const [project, setProject] = useState<Project | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [notFound, setNotFound] = useState(false);
   const [activeImage, setActiveImage] = useState(0);
 
-  if (!project) {
+  useEffect(() => {
+    if (!slug) return;
+    setIsLoading(true);
+    setNotFound(false);
+    setActiveImage(0);
+    projectsApi
+      .getBySlug(slug)
+      .then(setProject)
+      .catch(() => setNotFound(true))
+      .finally(() => setIsLoading(false));
+  }, [slug]);
+
+  if (isLoading) return <DetailSkeleton />;
+
+  if (notFound || !project) {
     return (
       <section className="mx-auto flex max-w-300 flex-col items-center px-6 py-40 text-center">
         <p className="text-base text-gray-900">Project not found.</p>
@@ -88,11 +127,8 @@ export function ProjectDetail() {
             {details.title}
           </h1>
         </div>
-
-        {/* CTA buttons */}
         <div className="flex flex-wrap items-center gap-2 pt-1">
           {isMobile ? (
-            // Mobile: download button kalau ada href, otherwise toast
             <button
               onClick={handleDemoClick}
               className="flex h-9 items-center gap-1.5 rounded-sm bg-gray-1000 px-4 font-sans text-sm font-medium text-background-100 transition-opacity hover:opacity-85">
@@ -120,7 +156,7 @@ export function ProjectDetail() {
         </div>
       </motion.div>
 
-      {/* Image area — layout beda: web = full width, mobile = portrait gallery */}
+      {/* Images */}
       <motion.div
         initial="hidden"
         animate="visible"
@@ -132,9 +168,8 @@ export function ProjectDetail() {
         }}
         className="mt-8">
         {isMobile ? (
-          // Mobile layout: row of portrait screenshots, active one larger
           <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-thin">
-            {details.images.map((img: string, i: number) => (
+            {details.images.map((img, i) => (
               <button
                 key={i}
                 onClick={() => setActiveImage(i)}
@@ -152,7 +187,6 @@ export function ProjectDetail() {
             ))}
           </div>
         ) : (
-          // Web layout: full width main image + thumbnail strip
           <>
             <div className="overflow-hidden rounded-md border border-gray-alpha-400 bg-gray-100">
               <img
@@ -163,7 +197,7 @@ export function ProjectDetail() {
             </div>
             {details.images.length > 1 && (
               <div className="mt-3 flex gap-2 overflow-x-auto pb-1 scrollbar-thin">
-                {details.images.map((img: string, i: number) => (
+                {details.images.map((img, i) => (
                   <button
                     key={i}
                     onClick={() => setActiveImage(i)}

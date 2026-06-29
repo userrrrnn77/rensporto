@@ -1,54 +1,66 @@
+// src/lib/api/uploads.ts
+// Ganti seluruh isi file ini
+
 import type { PresignResponse } from "@/types/comment";
 
-/**
- * ---------------------------------------------------------------------
- * MOCK API — stands in for a real presigned-upload backend (Cloudinary,
- * S3, etc).
- *
- * Mirrors the real two-step flow once the backend exists:
- *   1. presignUpload()        → ask the server for a one-time upload URL
- *   2. uploadToPresignedUrl() → PUT the file straight to storage
- *
- * When the real backend exists, swap the bodies below for actual
- * `fetch` calls — nothing that imports from this file needs to change,
- * since the signatures and return shapes already match what the real
- * version will look like.
- * ---------------------------------------------------------------------
- */
-
-const SIMULATED_LATENCY_MS = 400;
-
-function delay(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
+const BASE_URL = import.meta.env.VITE_URL_CORE;
 
 /**
- * POST /api/uploads/presign
- * Real version: ask the backend for a signed Cloudinary/S3 upload URL.
- * Mock version: skip the network and hand back a local object URL —
- * it behaves like a real image URL for the lifetime of this tab.
+ * POST /api/uploads/presign  (admin-only di backend — butuh token)
+ * Frontend portfolio (bukan admin) tidak punya token, tapi endpoint ini
+ * dipanggil pas user guest upload foto di comment form.
+ *
+ * Karena presign endpoint di backend pakai requireAuth, kita perlu
+ * kirim Authorization header dari localStorage kalau ada (admin),
+ * atau tetap kirim tanpa auth (akan 401) — pilihan arsitektur:
+ * simpan upload tetap boleh guest pakai token-less presign.
+ *
+ * NOTE: Kalau mau buka presign buat public (guest comment dengan foto),
+ * hapus requireAuth dari upload.routes.ts di backend.
  */
 export async function presignUpload(file: File): Promise<PresignResponse> {
-  await delay(SIMULATED_LATENCY_MS);
+  const token = localStorage.getItem("admin_token");
 
-  const objectUrl = URL.createObjectURL(file);
+  const res = await fetch(`${BASE_URL}/uploads/presign`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    body: JSON.stringify({
+      filename: file.name,
+      contentType: file.type,
+      fileSize: file.size,
+    }),
+  });
 
-  return {
-    uploadUrl: objectUrl,
-    publicUrl: objectUrl,
-  };
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(
+      (body as { message?: string }).message ??
+        `Presign failed: HTTP ${res.status}`,
+    );
+  }
+
+  return res.json() as Promise<PresignResponse>;
 }
 
 /**
  * PUT <uploadUrl>
- * Real version: stream the file bytes straight to Cloudinary/S3 using
- * the presigned URL — the server never sees the file itself.
- * Mock version: there's nothing to upload to (the "URL" is already a
- * local object URL), so this just simulates the network delay.
+ * Upload file langsung ke R2 via presigned URL.
+ * Server tidak pernah terima file bytes — hanya metadata.
  */
 export async function uploadToPresignedUrl(
-  _uploadUrl: string,
-  _file: File,
+  uploadUrl: string,
+  file: File,
 ): Promise<void> {
-  await delay(SIMULATED_LATENCY_MS);
+  const res = await fetch(uploadUrl, {
+    method: "PUT",
+    headers: { "Content-Type": file.type },
+    body: file,
+  });
+
+  if (!res.ok) {
+    throw new Error(`Upload to storage failed: HTTP ${res.status}`);
+  }
 }

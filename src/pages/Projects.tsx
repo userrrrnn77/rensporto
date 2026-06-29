@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link } from "react-router-dom";
 import {
@@ -10,7 +10,11 @@ import {
   List,
   AlignJustify,
 } from "lucide-react";
-import { PROJECTS, type ProjectCategory } from "@/constants/projects";
+import {
+  projectsApi,
+  type Project,
+  type ProjectCategory,
+} from "@/lib/api/projects";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 12 },
@@ -38,18 +42,14 @@ const VIEW_MODES: {
 
 // ─── Card variants ────────────────────────────────────────────────────────────
 
-function ProjectCardGrid({ project }: { project: (typeof PROJECTS)[number] }) {
+function ProjectCardGrid({ project }: { project: Project }) {
   const isMobile = project.category === "mobile";
-
   return (
     <Link
       to={`/projects/${project.slug}`}
       className="group relative flex flex-col overflow-hidden rounded-md border border-gray-alpha-400 bg-background-200 shadow-raised transition-all duration-300 hover:-translate-y-1 hover:shadow-modal">
-      {/* Cover — portrait untuk mobile, landscape untuk web */}
       <div
-        className={`relative w-full overflow-hidden bg-gray-100 ${
-          isMobile ? "aspect-9/16" : "aspect-video"
-        }`}>
+        className={`relative w-full overflow-hidden bg-gray-100 ${isMobile ? "aspect-9/16" : "aspect-video"}`}>
         <img
           src={project.card.coverCard}
           alt={project.card.title}
@@ -81,26 +81,20 @@ function ProjectCardGrid({ project }: { project: (typeof PROJECTS)[number] }) {
   );
 }
 
-function ProjectCardList({ project }: { project: (typeof PROJECTS)[number] }) {
+function ProjectCardList({ project }: { project: Project }) {
   const isMobile = project.category === "mobile";
-
   return (
     <Link
       to={`/projects/${project.slug}`}
       className="group flex items-center gap-4 rounded-md border border-gray-alpha-400 bg-background-200 p-3 shadow-raised transition-all duration-200 hover:shadow-menu">
-      {/* Thumbnail */}
       <div
-        className={`shrink-0 overflow-hidden rounded-sm border border-gray-alpha-300 bg-gray-100 ${
-          isMobile ? "h-16 w-9" : "h-12 w-20"
-        }`}>
+        className={`shrink-0 overflow-hidden rounded-sm border border-gray-alpha-300 bg-gray-100 ${isMobile ? "h-16 w-9" : "h-12 w-20"}`}>
         <img
           src={project.card.coverCard}
           alt={project.card.title}
           className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.04]"
         />
       </div>
-
-      {/* Text */}
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2">
           <span className="truncate font-sans text-sm font-semibold text-gray-1000">
@@ -117,7 +111,6 @@ function ProjectCardList({ project }: { project: (typeof PROJECTS)[number] }) {
           {project.card.shortDesc}
         </p>
       </div>
-
       <ArrowRight
         className="h-3.5 w-3.5 shrink-0 text-gray-600 transition-transform group-hover:translate-x-0.5"
         strokeWidth={2}
@@ -126,30 +119,20 @@ function ProjectCardList({ project }: { project: (typeof PROJECTS)[number] }) {
   );
 }
 
-function ProjectCardDetail({
-  project,
-}: {
-  project: (typeof PROJECTS)[number];
-}) {
+function ProjectCardDetail({ project }: { project: Project }) {
   const isMobile = project.category === "mobile";
-
   return (
     <Link
       to={`/projects/${project.slug}`}
       className="group flex gap-6 rounded-md border border-gray-alpha-400 bg-background-200 p-5 shadow-raised transition-all duration-200 hover:shadow-menu">
-      {/* Cover */}
       <div
-        className={`shrink-0 overflow-hidden rounded-sm border border-gray-alpha-300 bg-gray-100 ${
-          isMobile ? "h-40 w-22.5" : "h-32 w-52"
-        }`}>
+        className={`shrink-0 overflow-hidden rounded-sm border border-gray-alpha-300 bg-gray-100 ${isMobile ? "h-40 w-22.5" : "h-32 w-52"}`}>
         <img
           src={project.card.coverCard}
           alt={project.card.title}
           className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
         />
       </div>
-
-      {/* Text */}
       <div className="flex min-w-0 flex-1 flex-col justify-between">
         <div>
           <div className="flex flex-wrap items-center gap-2">
@@ -167,7 +150,6 @@ function ProjectCardDetail({
             {project.card.shortDesc}
           </p>
         </div>
-
         <div className="mt-4 flex items-center justify-between">
           <div className="flex items-center gap-3 text-xs text-gray-700">
             <span className="capitalize">{project.category}</span>
@@ -242,13 +224,11 @@ function Section({
 }: {
   eyebrow: string;
   icon: React.ElementType;
-  projects: typeof PROJECTS;
+  projects: Project[];
   viewMode: ViewMode;
   isSkeleton?: boolean;
 }) {
   const isMobileSection = eyebrow === "Mobile";
-
-  // Grid layout: mobile projects lebih ramping — 3 kolom di sm, web tetap 2
   const gridClass =
     viewMode === "grid"
       ? isMobileSection
@@ -268,11 +248,10 @@ function Section({
         <div className="h-px flex-1 bg-gray-alpha-300" />
         <span className="font-mono text-[10px] tabular-nums text-gray-600">
           {isSkeleton
-            ? "coming soon"
+            ? "loading..."
             : `${String(projects.length).padStart(2, "0")} projects`}
         </span>
       </div>
-
       <div className={gridClass}>
         {isSkeleton ? (
           <>
@@ -298,10 +277,21 @@ function Section({
 export function Projects() {
   const [activeFilter, setActiveFilter] = useState<Filter>("all");
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [fetchError, setFetchError] = useState(false);
 
-  const webPublic = PROJECTS.filter((p) => p.category === "web" && !p.private);
-  const webPrivate = PROJECTS.filter((p) => p.category === "web" && p.private);
-  const mobileProjects = PROJECTS.filter((p) => p.category === "mobile");
+  useEffect(() => {
+    projectsApi
+      .list()
+      .then(setProjects)
+      .catch(() => setFetchError(true))
+      .finally(() => setIsLoading(false));
+  }, []);
+
+  const webPublic = projects.filter((p) => p.category === "web" && !p.private);
+  const webPrivate = projects.filter((p) => p.category === "web" && p.private);
+  const mobileProjects = projects.filter((p) => p.category === "mobile");
 
   const showWeb = activeFilter === "all" || activeFilter === "web";
   const showMobile = activeFilter === "all" || activeFilter === "mobile";
@@ -320,7 +310,6 @@ export function Projects() {
         </span>
       </motion.div>
 
-      {/* Heading + controls row */}
       <motion.div
         initial="hidden"
         animate="visible"
@@ -334,9 +323,7 @@ export function Projects() {
         <h1 className="text-3xl font-semibold tracking-[-1.28px] text-gray-1000 sm:text-4xl sm:tracking-[-2.4px]">
           Things I've built.
         </h1>
-
         <div className="flex items-center gap-2">
-          {/* Filter pills */}
           <div className="flex items-center gap-1 rounded-sm border border-gray-alpha-400 bg-background-200 p-1">
             {FILTERS.map((f) => (
               <button
@@ -351,8 +338,6 @@ export function Projects() {
               </button>
             ))}
           </div>
-
-          {/* View mode toggle */}
           <div className="flex items-center gap-1 rounded-sm border border-gray-alpha-400 bg-background-200 p-1">
             {VIEW_MODES.map(({ icon: Icon, value, label }) => (
               <button
@@ -371,7 +356,6 @@ export function Projects() {
         </div>
       </motion.div>
 
-      {/* Sections */}
       <motion.div
         initial="hidden"
         animate="visible"
@@ -382,45 +366,52 @@ export function Projects() {
           ease: [0.175, 0.885, 0.32, 1.1],
         }}
         className="mt-12">
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={`${activeFilter}-${viewMode}`}
-            initial={{ opacity: 0, y: 6 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -6 }}
-            transition={{ duration: 0.2 }}>
-            {showWeb && (
-              <>
-                {webPublic.length > 0 && (
-                  <Section
-                    eyebrow="Web — Public"
-                    icon={Globe}
-                    projects={webPublic}
-                    viewMode={viewMode}
-                  />
-                )}
-                {webPrivate.length > 0 && (
-                  <Section
-                    eyebrow="Web — Private"
-                    icon={Lock}
-                    projects={webPrivate}
-                    viewMode={viewMode}
-                  />
-                )}
-              </>
-            )}
-
-            {showMobile && (
-              <Section
-                eyebrow="Mobile"
-                icon={Smartphone}
-                projects={mobileProjects}
-                viewMode={viewMode}
-                isSkeleton={mobileProjects.length === 0}
-              />
-            )}
-          </motion.div>
-        </AnimatePresence>
+        {fetchError ? (
+          <p className="py-20 text-center text-sm text-gray-700">
+            Failed to load projects. Please try again later.
+          </p>
+        ) : (
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={`${activeFilter}-${viewMode}`}
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -6 }}
+              transition={{ duration: 0.2 }}>
+              {showWeb && (
+                <>
+                  {(isLoading || webPublic.length > 0) && (
+                    <Section
+                      eyebrow="Web — Public"
+                      icon={Globe}
+                      projects={webPublic}
+                      viewMode={viewMode}
+                      isSkeleton={isLoading}
+                    />
+                  )}
+                  {(isLoading || webPrivate.length > 0) && (
+                    <Section
+                      eyebrow="Web — Private"
+                      icon={Lock}
+                      projects={webPrivate}
+                      viewMode={viewMode}
+                      isSkeleton={isLoading}
+                    />
+                  )}
+                </>
+              )}
+              {showMobile && (
+                <Section
+                  eyebrow="Mobile"
+                  icon={Smartphone}
+                  projects={mobileProjects}
+                  viewMode={viewMode}
+                  isSkeleton={isLoading || mobileProjects.length === 0}
+                />
+              )}
+            </motion.div>
+          </AnimatePresence>
+        )}
       </motion.div>
     </section>
   );
