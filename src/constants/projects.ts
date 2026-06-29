@@ -1,6 +1,3 @@
-import { mitraHasanahClient } from "@/assets/mitrahasanah-client";
-import { mitraHasanahAdmin } from "@/assets/mitrahasanah-admin";
-
 export type ProjectCategory = "web" | "mobile";
 
 export type Project = {
@@ -31,24 +28,13 @@ export const PROJECTS: Project[] = [
     private: false,
     card: {
       title: "KSPPS Berkah Mitra Hasanah",
-      coverCard: mitraHasanahClient.gambar3,
+      coverCard: "",
       shortDesc:
         "Portal web koperasi syariah berbasis React yang terintegrasi penuh dengan dashboard admin — produk, galeri, dan berita update realtime dari API.",
     },
     details: {
       title: "KSPPS Berkah Mitra Hasanah",
-      images: [
-        mitraHasanahClient.gambar1,
-        mitraHasanahClient.gambar2,
-        mitraHasanahClient.gambar3,
-        mitraHasanahClient.gambar4,
-        mitraHasanahClient.gambar5,
-        mitraHasanahClient.gambar6,
-        mitraHasanahClient.gambar7,
-        mitraHasanahClient.gambar8,
-        mitraHasanahClient.gambar9,
-        mitraHasanahClient.gambar10,
-      ],
+      images: ["", "", "", "", "", "", "", "", "", ""],
       description:
         "Portal web utama untuk KSPPS Berkah Mitra Hasanah, koperasi simpan pinjam berbasis syariah. Dibangun dengan React + Vite dan Tailwind CSS, terintegrasi langsung ke backend via Axios — perubahan dari admin (produk, galeri, berita) langsung muncul di sini tanpa perlu deploy ulang. Dilengkapi fitur dynamic SEO per halaman, upload bukti transaksi, halaman Baitul Maal, dan dark mode.",
       demo: {
@@ -67,24 +53,13 @@ export const PROJECTS: Project[] = [
     private: true,
     card: {
       title: "KSPPS Mitra Hasanah — Admin Dashboard",
-      coverCard: mitraHasanahAdmin.gambar1,
+      coverCard: "",
       shortDesc:
         "Dashboard admin internal untuk manajemen produk, galeri, berita, dan user koperasi syariah — CRUD penuh dengan upload Cloudinary.",
     },
     details: {
       title: "KSPPS Mitra Hasanah — Admin Dashboard",
-      images: [
-        mitraHasanahAdmin.gambar1,
-        mitraHasanahAdmin.gambar2,
-        mitraHasanahAdmin.gambar3,
-        mitraHasanahAdmin.gambar4,
-        mitraHasanahAdmin.gambar5,
-        mitraHasanahAdmin.gambar6,
-        mitraHasanahAdmin.gambar7,
-        mitraHasanahAdmin.gambar8,
-        mitraHasanahAdmin.gambar9,
-        mitraHasanahAdmin.gambar10,
-      ],
+      images: ["", "", "", "", "", "", "", "", "", ""],
       description:
         "Panel kendali internal untuk ekosistem KSPPS Berkah Mitra Hasanah. Dibangun dengan React + Vite, Zustand, dan TypeScript, terhubung ke backend Node.js via Axios. Fitur mencakup manajemen produk (CRUD + upload gambar ke Cloudinary), galeri event, Baitul Maal, berita, manajemen user, dan statistik realtime di dashboard overview. Dilindungi auth guard — hanya admin yang bisa masuk.",
       demo: {
