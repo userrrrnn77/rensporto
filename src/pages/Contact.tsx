@@ -57,29 +57,34 @@ export function Contact() {
       message: formData.get("message") as string,
     };
 
-    try {
-      const response = await fetch(`${BASE_URL}/contact`, {
+    // Kirim paralel — Web3Forms untuk email, backend untuk persist MongoDB
+    const [web3formsRes] = await Promise.allSettled([
+      fetch("https://api.web3forms.com/submit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          access_key: import.meta.env.VITE_WEB3FORMS_KEY,
+          ...payload,
+        }),
+      }).then((r) => r.json()),
+
+      fetch(`${BASE_URL}/contact`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
-      });
-      const data = (await response.json()) as {
-        success: boolean;
-        message: string;
-      };
+      }),
+    ]);
 
-      if (data.success) {
-        setStatus("success");
-      } else {
-        setStatus("idle");
-        toast.error(data.message ?? "Something went wrong.", {
-          description: "Coba lagi ya.",
-        });
-      }
-    } catch {
+    // Success/fail ditentuin dari Web3Forms — backend persist best-effort
+    if (
+      web3formsRes.status === "fulfilled" &&
+      web3formsRes.value?.success === true
+    ) {
+      setStatus("success");
+    } else {
       setStatus("idle");
-      toast.error("Tidak bisa menghubungi server.", {
-        description: "Cek koneksi kamu dan coba lagi.",
+      toast.error("Gagal mengirim pesan.", {
+        description: "Coba lagi ya.",
       });
     }
   }
