@@ -9,6 +9,9 @@ import {
 import { SKILL_ICONS } from "@/lib/skill-icons";
 import { useGitHubStats } from "@/hooks/useGitHubStats";
 import { AnimatedStat } from "@/components/layout/AnimatedStat";
+import { analyticsApi } from "@/lib/api/analitycs";
+import { useAsync } from "@/hooks/useAsync";
+import { Link } from "react-router-dom";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 12 },
@@ -22,6 +25,8 @@ function formatCommits(n: number): string {
 
 export function About() {
   const { repos, commits, loading, error } = useGitHubStats();
+
+  const analytics = useAsync(() => analyticsApi.stats(), []);
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({
@@ -38,12 +43,12 @@ export function About() {
       suffix: "+",
     },
     {
-      label: "Coding since",
-      rawValue: 2023,
+      label: "Views Web",
+      rawValue: analytics.data?.totalViews ?? 0,
       suffix: "",
     },
     {
-      label: "Commits pushed",
+      label: "Commits this year",
       rawValue: loading ? 0 : commits,
       formatter: formatCommits,
     },
@@ -165,12 +170,14 @@ export function About() {
                     {category.skills.map((skill) => {
                       const Icon = SKILL_ICONS[skill.icon];
                       return (
-                        <span
+                        <Link
                           key={skill.name}
+                          to={skill.href}
+                          target="_blank"
                           className="flex items-center gap-1.5 rounded-full border border-gray-alpha-400 bg-background-100 px-3 py-1 font-mono text-xs text-gray-900">
                           <Icon className="h-3.5 w-3.5" />
                           {skill.name}
-                        </span>
+                        </Link>
                       );
                     })}
                   </div>

@@ -19,6 +19,7 @@ export type SkillIcon =
 export type Skill = {
   name: string;
   icon: SkillIcon;
+  href: string;
 };
 
 export type SkillCategory = {
@@ -51,37 +52,52 @@ export const SKILL_CATEGORIES: SkillCategory[] = [
   {
     title: "Backend",
     skills: [
-      { name: "Node.js", icon: "nodejs" },
-      { name: "Express", icon: "express" },
-      { name: "MongoDB / Mongoose", icon: "mongodb" },
-      { name: "JWT Auth", icon: "jwt" },
-      { name: "Bun", icon: "bun" },
+      { name: "Node.js", icon: "nodejs", href: "https://nodejs.org" },
+      { name: "Express", icon: "express", href: "https://expressjs.com" },
+      {
+        name: "MongoDB / Mongoose",
+        icon: "mongodb",
+        href: "https://www.mongodb.com",
+      },
+      { name: "JWT Auth", icon: "jwt", href: "https://jwt.io" },
+      { name: "Bun", icon: "bun", href: "https://bun.sh" },
     ],
   },
   {
     title: "Web",
     skills: [
-      { name: "React", icon: "react" },
-      { name: "Next.js", icon: "nextjs" },
-      { name: "TypeScript", icon: "typescript" },
-      { name: "Tailwind CSS", icon: "tailwind" },
-      { name: "Vite", icon: "vite" },
+      { name: "React", icon: "react", href: "https://react.dev" },
+      { name: "Next.js", icon: "nextjs", href: "https://nextjs.org" },
+      {
+        name: "TypeScript",
+        icon: "typescript",
+        href: "https://www.typescriptlang.org",
+      },
+      {
+        name: "Tailwind CSS",
+        icon: "tailwind",
+        href: "https://tailwindcss.com",
+      },
+      { name: "Vite", icon: "vite", href: "https://vitejs.dev" },
     ],
   },
   {
     title: "Mobile",
     skills: [
-      { name: "React Native", icon: "reactNative" },
-      { name: "Expo", icon: "expo" },
+      {
+        name: "React Native",
+        icon: "reactNative",
+        href: "https://reactnative.dev",
+      },
+      { name: "Expo", icon: "expo", href: "https://expo.dev" },
     ],
   },
   {
     title: "Deploy & Tooling",
     skills: [
-      { name: "Vercel", icon: "vercel" },
-      { name: "Git", icon: "git" },
-      { name: "Docker", icon: "docker" },
-      { name: "Postman", icon: "postman" },
+      { name: "Vercel", icon: "vercel", href: "https://vercel.com" },
+      { name: "Git", icon: "git", href: "https://git-scm.com" },
+      { name: "Docker", icon: "docker", href: "https://www.docker.com" },
     ],
   },
 ];

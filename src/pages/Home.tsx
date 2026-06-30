@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 import { HERO_CONTENT, HERO_HIGHLIGHTS, STACK_FEATURES } from "@/constants";
 import { FEATURE_ICONS } from "@/lib/feature-icons";
+import { PinnedProjects } from "@/components/layout/PinnedProjects";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 12 },
@@ -131,6 +132,7 @@ export function Home() {
           </div>
         </div>
       </section>
+      <PinnedProjects />
     </>
   );
 }

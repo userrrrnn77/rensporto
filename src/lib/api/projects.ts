@@ -7,6 +7,7 @@ export type Project = {
   slug: string;
   category: ProjectCategory;
   private: boolean;
+  pins: boolean;
   card: {
     title: string;
     coverCard: string;

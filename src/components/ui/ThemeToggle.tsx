@@ -1,4 +1,5 @@
 import { Moon, Sun } from "lucide-react";
+import { FiGithub } from "react-icons/fi";
 import { useTheme } from "@/context/ThemeContext";
 
 export function ThemeToggle() {
@@ -23,3 +24,21 @@ export function ThemeToggle() {
     </button>
   );
 }
+
+export const GithubRepo = () => {
+  const urlRepo = "https://github.com/userrrrnn77/rensporto";
+
+  const handleClik = () => {
+    window.open(urlRepo, "_blank", "noopener,noreferrer");
+  };
+
+  return (
+    <button
+      type="button"
+      onClick={handleClik}
+      aria-label="View Repo"
+      className="relative flex h-9 w-9 items-center justify-center rounded-sm border border-gray-alpha-400 bg-background-100 text-gray-900 transition-colors hover:bg-gray-100 active:bg-gray-200">
+      <FiGithub className="h-4 w-4" strokeWidth={1.75} />
+    </button>
+  );
+};

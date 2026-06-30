@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link, NavLink as RouterNavLink } from "react-router-dom";
 import { Menu, X } from "lucide-react";
 import { NAV_LINKS, SITE_CONFIG } from "@/constants";
-import { ThemeToggle } from "@/components/ui/ThemeToggle";
+import { GithubRepo, ThemeToggle } from "@/components/ui/ThemeToggle";
 import { cn } from "@/lib/cn";
 
 export function Navbar() {
@@ -38,11 +38,13 @@ export function Navbar() {
 
         <div className="hidden items-center gap-3 md:flex">
           <ThemeToggle />
+          <GithubRepo />
         </div>
 
         {/* Mobile controls */}
         <div className="flex items-center gap-2 md:hidden">
           <ThemeToggle />
+          <GithubRepo /> 
           <button
             type="button"
             aria-label={isMenuOpen ? "Close menu" : "Open menu"}
