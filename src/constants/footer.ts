@@ -40,11 +40,16 @@ export const FOOTER_COLUMNS: FooterColumn[] = [
     ],
   },
   {
-    title: "Based In",
+    title: "Other",
     links: [
       {
         label: "Semarang, Indonesia",
         href: "https://maps.app.goo.gl/R7bJsTRRDBAsVo978",
+        external: true,
+      },
+      {
+        label: "Design",
+        href: "/design.md",
         external: true,
       },
     ],
