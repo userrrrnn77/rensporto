@@ -5,6 +5,12 @@ import { FaGithub } from "react-icons/fa";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { projectsApi, type Project } from "@/lib/api/projects";
+import * as SiIcons from "react-icons/si";
+import type { IconType } from "react-icons";
+
+function resolveTechIcon(iconKey: string): IconType | null {
+  return (SiIcons as Record<string, IconType>)[iconKey] ?? null;
+}
 
 const fadeUp = {
   hidden: { opacity: 0, y: 12 },
@@ -71,6 +77,7 @@ export function ProjectDetail() {
   }
 
   const { details, private: isPrivate, category } = project;
+
   const isMobile = category === "mobile";
 
   function handleDemoClick() {
@@ -237,6 +244,37 @@ export function ProjectDetail() {
           {details.description}
         </p>
       </motion.div>
+
+      {/* Tech stack */}
+      {details.techStack && details.techStack.length > 0 && (
+        <motion.div
+          initial="hidden"
+          animate="visible"
+          variants={fadeUp}
+          transition={{
+            duration: 0.4,
+            delay: 0.2,
+            ease: [0.175, 0.885, 0.32, 1.1],
+          }}
+          className="mt-10 max-w-200 border-t border-gray-alpha-400 pt-10">
+          <h2 className="font-sans text-sm font-medium uppercase tracking-wide text-gray-800">
+            Tech stack
+          </h2>
+          <div className="mt-4 flex flex-wrap gap-2">
+            {details.techStack.map((tech, i) => {
+              const Icon = resolveTechIcon(tech.icon);
+              return (
+                <span
+                  key={i}
+                  className="flex items-center gap-1.5 rounded-full border border-gray-alpha-400 bg-background-100 px-3 py-1.5 font-sans text-sm text-gray-900">
+                  {Icon && <Icon className="h-4 w-4" />}
+                  {tech.name}
+                </span>
+              );
+            })}
+          </div>
+        </motion.div>
+      )}
     </section>
   );
 }

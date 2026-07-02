@@ -1,6 +1,11 @@
-// src/lib/api/projects.ts  (FILE BARU)
+// src/lib/api/projects.ts
 
 export type ProjectCategory = "web" | "mobile";
+
+export type TechStackItem = {
+  name: string;
+  icon: string;
+};
 
 export type Project = {
   id: string;
@@ -19,6 +24,7 @@ export type Project = {
     description: string;
     demo: { icon: string; href: string | null } | null;
     repo: { icon: string; href: string | null } | null;
+    techStack: TechStackItem[];
   };
 };
 
