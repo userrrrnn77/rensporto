@@ -14,7 +14,7 @@ const fadeUp = {
 export function Home() {
   return (
     <>
-      <Title title="Rendy — Full-Stack Developer" raw path="/" />
+      <Title title="Rendy(Bre) — Full-Stack Developer" raw path="/" />
       <section className="relative overflow-hidden">
         <div className="bg-grid-fade absolute inset-0" aria-hidden="true" />
 
