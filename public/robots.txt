@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+Allow: /src/
+Allow: /assets/
+
+Disallow: /admin/
+Disallow: /dashboard/
+
+Sitemap: https://rensdev.my.id/sitemap.xml

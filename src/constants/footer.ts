@@ -50,10 +50,10 @@ export const FOOTER_COLUMNS: FooterColumn[] = [
       {
         label: "Design",
         href: "/design.md",
-        external: true,
       },
     ],
   },
 ];
 
-export const FOOTER_NOTE = "Built with React, and a lot of coffee. - Added more bugs to fix later.";
+export const FOOTER_NOTE =
+  "Built with React, and a lot of coffee. - Added more bugs to fix later.";

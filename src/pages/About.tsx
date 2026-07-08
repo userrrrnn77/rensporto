@@ -12,6 +12,7 @@ import { AnimatedStat } from "@/components/layout/AnimatedStat";
 import { analyticsApi } from "@/lib/api/analitycs";
 import { useAsync } from "@/hooks/useAsync";
 import { Link } from "react-router-dom";
+import { Title } from "@/components/common/Title";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 12 },
@@ -56,6 +57,11 @@ export function About() {
 
   return (
     <section className="mx-auto max-w-300 px-6 py-20 sm:py-28">
+      <Title
+        title="About"
+        description="Kenalan lebih jauh sama Rendy — background, pengalaman, dan tools yang dipakai sehari-hari sebagai full-stack developer."
+        path="/about"
+      />
       <motion.div
         initial="hidden"
         animate="visible"

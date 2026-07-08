@@ -1,5 +1,10 @@
 import { Link } from "react-router-dom";
-import { FOOTER_COLUMNS, FOOTER_NOTE, SITE_CONFIG, SOCIAL_LINKS } from "@/constants";
+import {
+  FOOTER_COLUMNS,
+  FOOTER_NOTE,
+  SITE_CONFIG,
+  SOCIAL_LINKS,
+} from "@/constants";
 import { SOCIAL_ICONS } from "@/lib/social-icons";
 
 function isExternalHref(href: string) {
@@ -16,8 +21,7 @@ export function Footer() {
           <div className="col-span-2 sm:col-span-1">
             <Link
               to="/"
-              className="font-mono text-sm font-medium text-gray-1000"
-            >
+              className="font-mono text-sm font-medium text-gray-1000">
               {SITE_CONFIG.initials}
             </Link>
             <p className="mt-3 max-w-50 text-sm text-gray-900">
@@ -37,8 +41,7 @@ export function Footer() {
                         : undefined
                     }
                     aria-label={social.label}
-                    className="flex h-8 w-8 items-center justify-center rounded-sm text-gray-900 transition-colors hover:bg-gray-100 hover:text-gray-1000"
-                  >
+                    className="flex h-8 w-8 items-center justify-center rounded-sm text-gray-900 transition-colors hover:bg-gray-100 hover:text-gray-1000">
                     <Icon className="h-4 w-4" />
                   </a>
                 );
@@ -58,18 +61,11 @@ export function Footer() {
                       <a
                         href={link.href}
                         target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-sm text-gray-900 transition-colors hover:text-gray-1000"
-                      >
+                        rel="noopener noreferrer">
                         {link.label}
                       </a>
                     ) : (
-                      <Link
-                        to={link.href}
-                        className="text-sm text-gray-900 transition-colors hover:text-gray-1000"
-                      >
-                        {link.label}
-                      </Link>
+                      <Link to={link.href}>{link.label}</Link>
                     )}
                   </li>
                 ))}

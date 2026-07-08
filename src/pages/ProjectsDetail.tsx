@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { projectsApi, type Project } from "@/lib/api/projects";
 import * as SiIcons from "react-icons/si";
 import type { IconType } from "react-icons";
+import { Title } from "@/components/common/Title";
 
 function resolveTechIcon(iconKey: string): IconType | null {
   return (SiIcons as Record<string, IconType>)[iconKey] ?? null;
@@ -92,6 +93,12 @@ export function ProjectDetail() {
 
   return (
     <section className="mx-auto max-w-300 px-6 py-20 sm:py-28">
+      <Title
+        title={details.title} // ganti: project.title
+        description={details.description.slice(0, 10)} // ganti: project.desc
+        path={`/projects/${slug}`}
+      />
+
       {/* Back */}
       <motion.div
         initial="hidden"

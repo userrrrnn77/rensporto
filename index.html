@@ -2,50 +2,56 @@
 <html lang="id">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
-    <title>Rendy — Full-Stack Developer</title>
-    <meta name="description" content="Full-stack developer spesialis React, Express, dan React Native (Expo). Bikin web yang cepat dan API yang bisa diandalkan." />
-    <meta name="keywords" content="full-stack developer, React, Express, Node.js, React Native, Expo, TypeScript, Tailwind CSS, Vite, Next.js, web developer Indonesia" />
-    <meta name="author" content="Rendy" />
-    <link rel="canonical" href="https://rendy.my.id" />
-
-    <meta property="og:type" content="website" />
-    <meta property="og:url" content="https://rendy.my.id" />
-    <meta property="og:title" content="Rendy — Full-Stack Developer" />
-    <meta property="og:description" content="Full-stack developer spesialis React, Express, dan React Native (Expo). Bikin web yang cepat dan API yang bisa diandalkan." />
-    <meta property="og:image" content="https://rendy.my.id/og-image.png" />
-    <meta property="og:image:width" content="1200" />
-    <meta property="og:image:height" content="630" />
-    <meta property="og:image:alt" content="Rendy — Full-Stack Developer" />
-    <meta property="og:site_name" content="Rendy" />
-    <meta property="og:locale" content="id_ID" />
-
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:url" content="https://rendy.my.id" />
-    <meta name="twitter:title" content="Rendy — Full-Stack Developer" />
-    <meta name="twitter:description" content="Full-stack developer spesialis React, Express, dan React Native (Expo). Bikin web yang cepat dan API yang bisa diandalkan." />
-    <meta name="twitter:image" content="https://rendy.my.id/og-image.png" />
-
     <link rel="icon" type="image/png" href="/mylogo.png" />
     <link rel="apple-touch-icon" href="/mylogo.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#0a0a0a" />
 
+    <!-- Primary Meta Tags -->
+    <title>Rendy — Full-Stack Developer</title>
+    <meta name="title" content="Rendy — Full-Stack Developer" />
+    <meta name="description" content="Portfolio Rendy, full-stack developer yang fokus di React, TypeScript, dan Node.js. Lihat proyek-proyek dan tulisan teknis di sini." />
+    <meta name="keywords" content="full-stack developer, react developer, typescript, node.js, portfolio developer indonesia, rendy" />
+    <link rel="canonical" href="https://rensdev.my.id/" />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://rensdev.my.id/" />
+    <meta property="og:title" content="Rendy — Full-Stack Developer" />
+    <meta property="og:description" content="Portfolio Rendy, full-stack developer yang fokus di React, TypeScript, dan Node.js. Lihat proyek-proyek dan tulisan teknis di sini." />
+    <meta property="og:image" content="https://rensdev.my.id/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Rendy — Full-Stack Developer Portfolio" />
+    <meta property="og:site_name" content="Rendy Portfolio" />
+    <meta property="og:locale" content="id_ID" />
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:url" content="https://rensdev.my.id/" />
+    <meta name="twitter:title" content="Rendy — Full-Stack Developer" />
+    <meta name="twitter:description" content="Portfolio Rendy, full-stack developer yang fokus di React, TypeScript, dan Node.js. Lihat proyek-proyek dan tulisan teknis di sini." />
+    <meta name="twitter:image" content="https://rensdev.my.id/og-image.png" />
+
+    <!-- Performance & Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&family=Geist+Mono:wght@100..900&display=swap"
-      rel="stylesheet"
-    />
+    <link href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&family=Geist+Mono:wght@100..900&display=swap" rel="stylesheet" />
 
+    <!-- Anti-Flash Theme Script (Biar transisi dark mode steril dari awal render) -->
     <script>
       (function () {
         try {
-          var stored = localStorage.getItem("theme");
-          var systemPrefersDark = window.matchMedia(
-            "(prefers-color-scheme: dark)"
-          ).matches;
-          var theme = stored || (systemPrefersDark ? "dark" : "light");
+          // Ngikutin spec design.md lu yang pake cookie
+          var cookies = document.cookie.split(';');
+          var theme = 'dark'; // default
+          for (var i = 0; i < cookies.length; i++) {
+            var c = cookies[i].trim();
+            if (c.indexOf('theme=') === 0) {
+              theme = c.substring(6);
+              break;
+            }
+          }
           document.documentElement.classList.toggle("dark", theme === "dark");
           document.documentElement.style.colorScheme = theme;
         } catch (e) {}

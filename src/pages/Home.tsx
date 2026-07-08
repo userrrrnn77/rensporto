@@ -4,6 +4,7 @@ import { ArrowRight } from "lucide-react";
 import { HERO_CONTENT, HERO_HIGHLIGHTS, STACK_FEATURES } from "@/constants";
 import { FEATURE_ICONS } from "@/lib/feature-icons";
 import { PinnedProjects } from "@/components/layout/PinnedProjects";
+import { Title } from "@/components/common/Title";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 12 },
@@ -13,6 +14,7 @@ const fadeUp = {
 export function Home() {
   return (
     <>
+      <Title title="Rendy — Full-Stack Developer" raw path="/" />
       <section className="relative overflow-hidden">
         <div className="bg-grid-fade absolute inset-0" aria-hidden="true" />
 

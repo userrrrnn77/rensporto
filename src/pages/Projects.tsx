@@ -15,6 +15,7 @@ import {
   type Project,
   type ProjectCategory,
 } from "@/lib/api/projects";
+import { Title } from "@/components/common/Title";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 12 },
@@ -298,6 +299,11 @@ export function Projects() {
 
   return (
     <section className="mx-auto max-w-300 px-6 py-20 sm:py-28">
+      <Title
+        title="Projects"
+        description="Kumpulan proyek yang pernah dikerjakan Rendy — dari web app, API, sampai aplikasi mobile React Native."
+        path="/projects"
+      />
       <motion.div
         initial="hidden"
         animate="visible"

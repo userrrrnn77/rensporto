@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import { CheckCircle, Send } from "lucide-react";
 import { CommentSection } from "@/components/layout/CommentSection";
+import { Title } from "@/components/common/Title";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 12 },
@@ -91,6 +92,11 @@ export function Contact() {
 
   return (
     <section className="mx-auto max-w-300 px-6 py-20 sm:py-28">
+      <Title
+        title="Contact"
+        description="Mau kolaborasi atau ada proyek yang butuh dikerjain? Hubungi Rendy lewat form atau media sosial."
+        path="/contact"
+      />
       <motion.div
         initial="hidden"
         animate="visible"
