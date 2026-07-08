@@ -50,6 +50,7 @@ export const FOOTER_COLUMNS: FooterColumn[] = [
       {
         label: "Design",
         href: "/design.md",
+        external: true,
       },
     ],
   },
