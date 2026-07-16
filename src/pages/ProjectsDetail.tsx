@@ -23,21 +23,78 @@ const fadeUp = {
 };
 
 // ─── Skeleton ─────────────────────────────────────────────────────────────────
+// Mirrors the real 2-column layout: back link, eyebrow+title header, media,
+// about section, tech stack / actions row, and a related-projects rail.
 
 function DetailSkeleton() {
   return (
     <section className="mx-auto max-w-300 px-6 py-20 sm:py-28">
-      <div className="h-4 w-12 animate-pulse rounded-sm bg-gray-alpha-200" />
-      <div className="mt-6 space-y-3">
-        <div className="h-8 w-2/3 animate-pulse rounded-sm bg-gray-alpha-200" />
-        <div className="h-4 w-1/3 animate-pulse rounded-sm bg-gray-alpha-100" />
+      {/* Back */}
+      <div className="h-4 w-14 animate-pulse rounded-sm bg-gray-alpha-200" />
+
+      {/* Header: eyebrow badge + title */}
+      <div className="mt-6">
+        <div className="flex items-center gap-2">
+          <span className="h-1.5 w-1.5 rounded-full bg-gray-alpha-400" />
+          <div className="h-3 w-16 animate-pulse rounded-sm bg-gray-alpha-200" />
+        </div>
+        <div className="mt-3 h-9 w-2/3 animate-pulse rounded-sm bg-gray-alpha-200 sm:h-10" />
       </div>
-      <div className="mt-8 aspect-video w-full animate-pulse rounded-md bg-gray-alpha-100" />
-      <div className="mt-10 space-y-3 border-t border-gray-alpha-400 pt-10">
-        <div className="h-4 w-32 animate-pulse rounded-sm bg-gray-alpha-200" />
-        <div className="h-3 w-full animate-pulse rounded-sm bg-gray-alpha-100" />
-        <div className="h-3 w-4/5 animate-pulse rounded-sm bg-gray-alpha-100" />
-        <div className="h-3 w-3/4 animate-pulse rounded-sm bg-gray-alpha-100" />
+
+      <div className="mt-8 grid grid-cols-1 gap-10 lg:grid-cols-[1fr_320px]">
+        <div className="min-w-0">
+          {/* Media */}
+          <div className="aspect-video w-full animate-pulse rounded-md bg-gray-alpha-100" />
+          <div className="mt-3 flex gap-2">
+            <div className="h-16 w-24 shrink-0 animate-pulse rounded-sm bg-gray-alpha-100" />
+            <div className="h-16 w-24 shrink-0 animate-pulse rounded-sm bg-gray-alpha-100" />
+            <div className="h-16 w-24 shrink-0 animate-pulse rounded-sm bg-gray-alpha-100" />
+          </div>
+
+          {/* About */}
+          <div className="mt-10 space-y-3 border-t border-gray-alpha-400 pt-10">
+            <div className="h-3 w-32 animate-pulse rounded-sm bg-gray-alpha-200" />
+            <div className="space-y-2 pt-1">
+              <div className="h-3.5 w-full animate-pulse rounded-sm bg-gray-alpha-100" />
+              <div className="h-3.5 w-full animate-pulse rounded-sm bg-gray-alpha-100" />
+              <div className="h-3.5 w-3/4 animate-pulse rounded-sm bg-gray-alpha-100" />
+            </div>
+          </div>
+
+          {/* Tech stack + actions */}
+          <div className="mt-10 flex flex-wrap items-end justify-between gap-6 border-t border-gray-alpha-400 pt-10">
+            <div>
+              <div className="h-3 w-20 animate-pulse rounded-sm bg-gray-alpha-200" />
+              <div className="mt-4 flex flex-wrap gap-2">
+                <div className="h-7 w-20 animate-pulse rounded-full bg-gray-alpha-100" />
+                <div className="h-7 w-24 animate-pulse rounded-full bg-gray-alpha-100" />
+                <div className="h-7 w-16 animate-pulse rounded-full bg-gray-alpha-100" />
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="h-9 w-28 animate-pulse rounded-sm bg-gray-alpha-200" />
+              <div className="h-9 w-28 animate-pulse rounded-sm bg-gray-alpha-100" />
+            </div>
+          </div>
+        </div>
+
+        {/* Related projects rail */}
+        <div className="lg:sticky lg:top-24 lg:self-start">
+          <div className="h-3 w-28 animate-pulse rounded-sm bg-gray-alpha-200" />
+          <div className="mt-4 space-y-2">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <div
+                key={i}
+                className="flex items-center gap-3 rounded-md border border-gray-alpha-400 bg-background-200 p-2.5">
+                <div className="h-14 w-14 shrink-0 animate-pulse rounded-sm bg-gray-alpha-100" />
+                <div className="min-w-0 flex-1 space-y-2">
+                  <div className="h-3 w-3/4 animate-pulse rounded-sm bg-gray-alpha-200" />
+                  <div className="h-2.5 w-1/2 animate-pulse rounded-sm bg-gray-alpha-100" />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     </section>
   );
