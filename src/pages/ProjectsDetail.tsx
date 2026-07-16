@@ -65,8 +65,6 @@ export function ProjectDetail() {
       .catch(() => setNotFound(true))
       .finally(() => setIsLoading(false));
 
-    // Fetch list terpisah buat related projects — nggak blocking isLoading
-    // utama, gagal diam-diam aja (nggak kritikal buat halaman ini).
     projectsApi
       .list()
       .then(setAllProjects)
@@ -106,8 +104,8 @@ export function ProjectDetail() {
   return (
     <section className="mx-auto max-w-300 px-6 py-20 sm:py-28">
       <Title
-        title={details.title} // ganti: project.title
-        description={details.description.slice(0, 10)} // ganti: project.desc
+        title={details.title}
+        description={details.description.slice(0, 10)}
         path={`/projects/${slug}`}
       />
 
@@ -155,9 +153,7 @@ export function ProjectDetail() {
 
       {/* ─── 2-column layout: main content (kiri) + related projects (kanan) ─── */}
       <div className="mt-8 grid grid-cols-1 gap-10 lg:grid-cols-[1fr_320px]">
-        {/* ── Kolom kiri: images, description, tech stack, actions ── */}
         <div className="min-w-0">
-          {/* Images */}
           <motion.div
             initial="hidden"
             animate="visible"
@@ -219,7 +215,6 @@ export function ProjectDetail() {
             )}
           </motion.div>
 
-          {/* Description */}
           <motion.div
             initial="hidden"
             animate="visible"
@@ -238,7 +233,6 @@ export function ProjectDetail() {
             </p>
           </motion.div>
 
-          {/* Tech stack + actions (demo/repo) sejajar di baris yang sama */}
           <motion.div
             initial="hidden"
             animate="visible"
@@ -249,7 +243,6 @@ export function ProjectDetail() {
               ease: [0.175, 0.885, 0.32, 1.1],
             }}
             className="mt-10 flex flex-wrap items-end justify-between gap-6 border-t border-gray-alpha-400 pt-10">
-            {/* Tech stack */}
             {details.techStack && details.techStack.length > 0 ? (
               <div>
                 <h2 className="font-sans text-sm font-medium uppercase tracking-wide text-gray-800">
@@ -304,7 +297,6 @@ export function ProjectDetail() {
           </motion.div>
         </div>
 
-        {/* ── Kolom kanan: related projects — sticky di desktop, stack di bawah pas mobile ── */}
         <div className="lg:sticky lg:top-24 lg:self-start">
           <RelatedProjects projects={relatedProjects} category={category} />
         </div>

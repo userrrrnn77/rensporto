@@ -10,7 +10,6 @@ export function Layout() {
   const location = useLocation();
 
   useEffect(() => {
-    // Track setiap navigasi — fire-and-forget, gagal pun tidak crash UI
     fetch(`${BASE_URL}/analytics/hit`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -18,9 +17,7 @@ export function Layout() {
         path: location.pathname,
         referrer: document.referrer || "Direct",
       }),
-    }).catch(() => {
-      // silent fail
-    });
+    }).catch(() => {});
   }, [location.pathname]);
 
   return (

@@ -16,7 +16,7 @@ export function Footer() {
 
   return (
     <footer className="border-t border-gray-alpha-400 bg-background-200">
-      <div className="mx-auto max-w-300 px-6 py-16">
+      <div className="mx-auto max-w-300 px-6 py-10">
         <div className="grid grid-cols-2 gap-10 sm:grid-cols-4">
           <div className="col-span-2 sm:col-span-1">
             <Link
@@ -74,7 +74,7 @@ export function Footer() {
           ))}
         </div>
 
-        <div className="mt-12 flex flex-col gap-2 border-t border-gray-alpha-400 pt-6 sm:flex-row sm:items-center sm:justify-between">
+        <div className="mt-10 flex flex-col gap-2 border-t border-gray-alpha-400 pt-6 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-xs text-gray-800">
             © {year} {SITE_CONFIG.name}. All rights reserved.
           </p>

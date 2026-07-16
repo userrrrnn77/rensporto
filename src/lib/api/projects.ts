@@ -26,7 +26,7 @@ export type Project = {
     repo: { icon: string; href: string | null } | null;
     techStack: TechStackItem[];
   };
-  createdAt: string; // ISO date string, dipakai buat sort "related projects"
+  createdAt: string;
 };
 
 const BASE_URL = import.meta.env.VITE_URL_CORE;

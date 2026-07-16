@@ -48,12 +48,6 @@ function CommentSkeleton() {
   );
 }
 
-// ─── Avatar — foto profil kalau ada, fallback ke inisial ──────────────────────
-// NOTE: color comes from getAvatarPalette(name), which is a pure function
-// (see lib/avatar-color.ts). Any perceived "flicker" in color across
-// re-renders is a key/reconciliation issue at the call site, not here —
-// every list that renders this component must key on comment.id.
-
 function CommentAvatar({
   name,
   imageUrl,
@@ -106,7 +100,6 @@ function ModalBackdrop({
   children: React.ReactNode;
   maxWidthClassName?: string;
 }) {
-  // Close on Escape
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
       if (e.key === "Escape") onClose();
@@ -115,7 +108,6 @@ function ModalBackdrop({
     return () => document.removeEventListener("keydown", onKey);
   }, [onClose]);
 
-  // Lock body scroll
   useEffect(() => {
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
@@ -167,7 +159,6 @@ export function EditModal({
   const [error, setError] = useState<string | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  // Auto-focus + move caret to end
   useEffect(() => {
     const el = textareaRef.current;
     if (!el) return;
@@ -490,10 +481,6 @@ function ReplyModal({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
-  // Siapa yang lagi dibales — default ke top-level comment, tapi bisa
-  // di-retarget ke reply manapun lewat tombol "Balas" di ReplyRow. Ini
-  // yang bikin parentId beneran nested (backend udah support parentId
-  // nunjuk ke reply lain), bukan selalu flat ke parentComment.id.
   const [replyTargetId, setReplyTargetId] = useState(parentComment.id);
 
   const replyTarget = useMemo(() => {
@@ -501,9 +488,6 @@ function ReplyModal({
     return replies.find((r) => r.id === replyTargetId) ?? parentComment;
   }, [replyTargetId, parentComment, replies]);
 
-  // Kalo reply yang lagi ditarget ke-delete (langsung atau ke-cascade
-  // dari parent-nya), balikin target ke top-level comment daripada diem2
-  // ngirim ke parentId yang udah ga ada.
   useEffect(() => {
     if (replyTargetId === parentComment.id) return;
     const stillExists = replies.some((r) => r.id === replyTargetId);
@@ -917,10 +901,6 @@ export function CommentSection() {
     };
   }, [avatarPreviewUrl]);
 
-  // Top-level comments (no parent), newest first — order comes from the
-  // API (sorted by createdAt desc). Replies are anything with a parentId,
-  // flattened per top-level ancestor regardless of reply-depth, sorted
-  // oldest -> newest so the thread reads top to bottom like a chat.
   const topLevelComments = useMemo(
     () => comments.filter((c) => c.parentId === null),
     [comments],
@@ -934,7 +914,7 @@ export function CommentSection() {
       let current: Comment | undefined = comment;
       const seen = new Set<string>();
       while (current?.parentId) {
-        if (seen.has(current.id)) return null; // guard against bad data loops
+        if (seen.has(current.id)) return null;
         seen.add(current.id);
         if (topLevelIds.has(current.parentId)) return current.parentId;
         current = byId.get(current.parentId);
@@ -997,7 +977,6 @@ export function CommentSection() {
     setSubmitError(null);
 
     try {
-      // Upload avatar ke R2 kalau ada
       let imageUrl: string | null = null;
       if (avatarFile) {
         const { uploadUrl, publicUrl } = await presignUpload(avatarFile);
@@ -1024,16 +1003,9 @@ export function CommentSection() {
   }
 
   function handleDeleted(id: string) {
-    // Deleting a top-level comment cascades server-side to its whole
-    // reply subtree, so drop any comment that was that id OR had it
-    // (transitively) as an ancestor. Simplest safe client-side mirror:
-    // just refilter out anything no longer reachable — but since we
-    // don't want another round trip, we conservatively drop the id
-    // itself plus direct/indirect children we already know about.
     setComments((prev) => {
       const removedIds = new Set<string>([id]);
-      // Repeatedly sweep for children of anything already removed, so
-      // reply-of-reply chains are fully cleaned up too.
+
       let changed = true;
       while (changed) {
         changed = false;
@@ -1056,7 +1028,6 @@ export function CommentSection() {
     }
   }
 
-  // Preview avatar di form — nama fallback ke inisial kalau belum diisi
   const previewName = name.trim() || "?";
 
   return (

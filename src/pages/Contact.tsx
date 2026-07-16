@@ -58,7 +58,6 @@ export function Contact() {
       message: formData.get("message") as string,
     };
 
-    // Kirim paralel — Web3Forms untuk email, backend untuk persist MongoDB
     const [web3formsRes] = await Promise.allSettled([
       fetch("https://api.web3forms.com/submit", {
         method: "POST",
@@ -76,7 +75,6 @@ export function Contact() {
       }),
     ]);
 
-    // Success/fail ditentuin dari Web3Forms — backend persist best-effort
     if (
       web3formsRes.status === "fulfilled" &&
       web3formsRes.value?.success === true

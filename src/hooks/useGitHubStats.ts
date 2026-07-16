@@ -1,5 +1,4 @@
 // src/hooks/useGitHubStats.ts
-// Ganti seluruh isi file ini — sekarang fetch dari backend, bukan langsung ke GitHub API
 
 import { useEffect, useState } from "react";
 

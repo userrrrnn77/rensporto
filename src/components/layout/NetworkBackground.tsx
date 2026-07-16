@@ -209,7 +209,7 @@ export function NetworkBackground() {
 
     function draw(ts: number) {
       if (!startTime) startTime = ts;
-      const elapsed = (ts - startTime) / 1000; // seconds
+      const elapsed = (ts - startTime) / 1000;
 
       const W = window.innerWidth;
       const H = window.innerHeight;

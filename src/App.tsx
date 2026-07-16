@@ -7,6 +7,7 @@ import { ProjectDetail } from "@/pages/ProjectsDetail";
 import { Contact } from "@/pages/Contact";
 import { useTheme } from "./context/ThemeContext";
 import { Toaster } from "sonner";
+import { NotFound } from "./pages/NotFound";
 
 export function App() {
   const { theme } = useTheme();
@@ -21,6 +22,7 @@ export function App() {
           <Route path="projects" element={<Projects />} />
           <Route path="projects/:slug" element={<ProjectDetail />} />
           <Route path="contact" element={<Contact />} />
+          <Route path="*" element={<NotFound />} />
         </Route>
       </Routes>
     </BrowserRouter>

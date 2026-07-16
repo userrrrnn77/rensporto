@@ -20,11 +20,6 @@ export const IMAGE_UPLOAD_RULES = {
   maxSizeLabel: "5MB",
 } as const;
 
-/**
- * Returns an error message if the file fails validation, or `null` if
- * it's fine to use. Checked client-side before upload; the real backend
- * should still re-validate type and size when it exists.
- */
 export function validateImageFile(file: File): string | null {
   if (
     !ACCEPTED_MIME_TYPES.includes(

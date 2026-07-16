@@ -25,11 +25,6 @@ export async function getComments(): Promise<Comment[]> {
   return req<Comment[]>("/comments");
 }
 
-/**
- * Creates either a top-level comment or a reply — same endpoint, the
- * only difference is whether `parentId` is set. Used for both from the
- * comment form and the reply modal.
- */
 export async function postComment(input: CreateCommentInput): Promise<Comment> {
   return req<Comment>("/comments", {
     method: "POST",

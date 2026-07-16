@@ -5,12 +5,6 @@ import type { Project } from "@/lib/api/projects";
 
 const MAX_RELATED = 5;
 
-/**
- * Related projects — sama category dengan project yang lagi dibuka,
- * terbaru dulu, exclude diri sendiri. Ditampilkan di sidebar kanan
- * (desktop) / stack di bawah konten utama (mobile, lihat grid di
- * ProjectDetail.tsx: grid-cols-1 lg:grid-cols-[1fr_320px]).
- */
 export function getRelatedProjects(
   allProjects: Project[],
   current: Project,
@@ -78,9 +72,6 @@ export function RelatedProjects({
         delay: 0.25,
         ease: [0.175, 0.885, 0.32, 1.1],
       }}
-      // Border-top di sini bikin sidebar punya pemisah visual yang sama
-      // dengan section kiri (About/Tech stack) meskipun tingginya beda —
-      // di mobile (stacked), border ini juga yang misahin dari konten atas.
       className="mt-10 border-t border-gray-alpha-400 pt-10 lg:mt-0 lg:border-t-0 lg:pt-0">
       <h2 className="font-sans text-sm font-medium uppercase tracking-wide text-gray-800">
         More {category} projects

@@ -1,11 +1,4 @@
-/**
- * Minimal cookie helpers. Used instead of localStorage for guest identity
- * (see lib/guest.ts) so the value is consistent across tabs and would also
- * be readable server-side if this app ever grows an SSR layer.
- */
-
 type CookieOptions = {
-  /** Days until the cookie expires. Omit for a session cookie. */
   days?: number;
   path?: string;
   sameSite?: "Lax" | "Strict" | "None";
