@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Pencil,
@@ -8,6 +8,8 @@ import {
   UserRound,
   Loader2,
   AlertTriangle,
+  MessageCircle,
+  CodeXml,
 } from "lucide-react";
 import { COMMENT_SECTION_CONTENT as COPY } from "@/constants/comments";
 import { getGuestId, getGuestName, setGuestName } from "@/lib/guest";
@@ -47,6 +49,10 @@ function CommentSkeleton() {
 }
 
 // ─── Avatar — foto profil kalau ada, fallback ke inisial ──────────────────────
+// NOTE: color comes from getAvatarPalette(name), which is a pure function
+// (see lib/avatar-color.ts). Any perceived "flicker" in color across
+// re-renders is a key/reconciliation issue at the call site, not here —
+// every list that renders this component must key on comment.id.
 
 function CommentAvatar({
   name,
@@ -78,14 +84,27 @@ function CommentAvatar({
   );
 }
 
+// ─── Developer badge — for isAdminReply comments ─────────────────────────────
+
+function DeveloperBadge() {
+  return (
+    <span className="inline-flex items-center gap-1 rounded-full border border-blue-300 bg-blue-100 px-2 py-0.5 font-sans text-[10px] font-medium text-blue-800">
+      <CodeXml className="h-2.5 w-2.5" strokeWidth={2.5} />
+      Developer
+    </span>
+  );
+}
+
 // ─── Shared backdrop + modal shell ───────────────────────────────────────────
 
 function ModalBackdrop({
   onClose,
   children,
+  maxWidthClassName = "max-w-md",
 }: {
   onClose: () => void;
   children: React.ReactNode;
+  maxWidthClassName?: string;
 }) {
   // Close on Escape
   useEffect(() => {
@@ -124,7 +143,7 @@ function ModalBackdrop({
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.96, y: 6 }}
           transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
-          className="w-full max-w-md rounded-md border border-gray-alpha-400 bg-background-100 shadow-modal">
+          className={`w-full ${maxWidthClassName} rounded-md border border-gray-alpha-400 bg-background-100 shadow-modal`}>
           {children}
         </motion.div>
       </motion.div>
@@ -343,18 +362,434 @@ export function DeleteModal({
   );
 }
 
+// ─── Reply row — compact version of a comment card, used inside ReplyModal ───
+
+function ReplyRow({
+  reply,
+  isOwn,
+  isReplyTarget,
+  onUpdated,
+  onDeleted,
+  onReplyToThis,
+}: {
+  reply: Comment;
+  isOwn: boolean;
+  isReplyTarget: boolean;
+  onUpdated: (comment: Comment) => void;
+  onDeleted: (id: string) => void;
+  onReplyToThis: (reply: Comment) => void;
+}) {
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+
+  async function handleSave(draft: string) {
+    const updated = await updateComment(reply.id, {
+      guestId: getGuestId(),
+      message: draft,
+    });
+    onUpdated(updated);
+  }
+
+  async function handleDelete() {
+    await deleteComment(reply.id, getGuestId());
+    onDeleted(reply.id);
+  }
+
+  return (
+    <div
+      className={`flex gap-3 rounded-md border p-3 transition-colors ${
+        isReplyTarget
+          ? "border-blue-700 bg-blue-100"
+          : "border-gray-alpha-300 bg-background-200"
+      }`}>
+      {showEditModal && (
+        <EditModal
+          initialMessage={reply.message}
+          onSave={handleSave}
+          onClose={() => setShowEditModal(false)}
+        />
+      )}
+      {showDeleteModal && (
+        <DeleteModal
+          onConfirm={handleDelete}
+          onClose={() => setShowDeleteModal(false)}
+        />
+      )}
+
+      <CommentAvatar name={reply.name} imageUrl={reply.imageUrl} size="sm" />
+
+      <div className="min-w-0 flex-1">
+        <div className="flex flex-wrap items-center gap-1.5">
+          <span className="truncate font-sans text-xs font-medium text-gray-1000">
+            {reply.name}
+          </span>
+          {reply.isAdminReply && <DeveloperBadge />}
+          <span className="font-sans text-[11px] text-gray-700">
+            · {formatRelativeTime(reply.createdAt)}
+            {reply.updatedAt && " · diedit"}
+          </span>
+        </div>
+
+        <p className="mt-1 text-sm leading-6 text-gray-900 whitespace-pre-wrap wrap-break-word">
+          {reply.message}
+        </p>
+
+        <div className="mt-2 flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() => onReplyToThis(reply)}
+            className="flex items-center gap-1 font-sans text-[11px] text-gray-700 hover:text-gray-1000">
+            <MessageCircle className="h-3 w-3" strokeWidth={2} />
+            Balas
+          </button>
+          {isOwn && (
+            <>
+              <button
+                type="button"
+                onClick={() => setShowEditModal(true)}
+                className="flex items-center gap-1 font-sans text-[11px] text-gray-700 hover:text-gray-1000">
+                <Pencil className="h-3 w-3" strokeWidth={2} />
+                {COPY.editLabel}
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowDeleteModal(true)}
+                className="flex items-center gap-1 font-sans text-[11px] text-gray-700 hover:text-red-700">
+                <Trash2 className="h-3 w-3" strokeWidth={2} />
+                {COPY.deleteLabel}
+              </button>
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Reply Modal — shows the flat reply thread + a form to add one ──────────
+
+function ReplyModal({
+  parentComment,
+  replies,
+  guestId,
+  onClose,
+  onReplyCreated,
+  onReplyUpdated,
+  onReplyDeleted,
+}: {
+  parentComment: Comment;
+  replies: Comment[];
+  guestId: string | null;
+  onClose: () => void;
+  onReplyCreated: (comment: Comment) => void;
+  onReplyUpdated: (comment: Comment) => void;
+  onReplyDeleted: (id: string) => void;
+}) {
+  const [name, setName] = useState(getGuestName());
+  const [message, setMessage] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+
+  // Siapa yang lagi dibales — default ke top-level comment, tapi bisa
+  // di-retarget ke reply manapun lewat tombol "Balas" di ReplyRow. Ini
+  // yang bikin parentId beneran nested (backend udah support parentId
+  // nunjuk ke reply lain), bukan selalu flat ke parentComment.id.
+  const [replyTargetId, setReplyTargetId] = useState(parentComment.id);
+
+  const replyTarget = useMemo(() => {
+    if (replyTargetId === parentComment.id) return parentComment;
+    return replies.find((r) => r.id === replyTargetId) ?? parentComment;
+  }, [replyTargetId, parentComment, replies]);
+
+  // Kalo reply yang lagi ditarget ke-delete (langsung atau ke-cascade
+  // dari parent-nya), balikin target ke top-level comment daripada diem2
+  // ngirim ke parentId yang udah ga ada.
+  useEffect(() => {
+    if (replyTargetId === parentComment.id) return;
+    const stillExists = replies.some((r) => r.id === replyTargetId);
+    if (!stillExists) setReplyTargetId(parentComment.id);
+  }, [replies, replyTargetId, parentComment.id]);
+
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [avatarPreviewUrl, setAvatarPreviewUrl] = useState<string | null>(null);
+  const [avatarError, setAvatarError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    return () => {
+      if (avatarPreviewUrl) URL.revokeObjectURL(avatarPreviewUrl);
+    };
+  }, [avatarPreviewUrl]);
+
+  function handleAvatarSelect(file: File | undefined) {
+    if (!file) return;
+    const validationError = validateImageFile(file);
+    if (validationError) {
+      setAvatarError(validationError);
+      return;
+    }
+    if (avatarPreviewUrl) URL.revokeObjectURL(avatarPreviewUrl);
+    setAvatarError(null);
+    setAvatarFile(file);
+    setAvatarPreviewUrl(URL.createObjectURL(file));
+  }
+
+  function handleRemoveAvatar() {
+    if (avatarPreviewUrl) URL.revokeObjectURL(avatarPreviewUrl);
+    setAvatarFile(null);
+    setAvatarPreviewUrl(null);
+    setAvatarError(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  }
+
+  async function handleSubmit(event: FormEvent) {
+    event.preventDefault();
+    if (!guestId || !message.trim() || !name.trim()) return;
+
+    setIsSubmitting(true);
+    setSubmitError(null);
+
+    try {
+      let imageUrl: string | null = null;
+      if (avatarFile) {
+        const { uploadUrl, publicUrl } = await presignUpload(avatarFile);
+        await uploadToPresignedUrl(uploadUrl, avatarFile);
+        imageUrl = publicUrl;
+      }
+
+      const resolvedName = name.trim();
+
+      const created = await postComment({
+        guestId,
+        name: resolvedName,
+        message: message.trim(),
+        imageUrl,
+        parentId: replyTarget.id,
+      });
+
+      onReplyCreated(created);
+      setGuestName(resolvedName);
+      setMessage("");
+      setReplyTargetId(parentComment.id);
+      handleRemoveAvatar();
+    } catch (err) {
+      setSubmitError(
+        err instanceof Error ? err.message : "Gagal mengirim balasan.",
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
+  const previewName = name.trim() || "?";
+  const canSubmit = message.trim().length > 0 && name.trim().length > 0;
+  const isTargetingReply = replyTarget.id !== parentComment.id;
+
+  return (
+    <ModalBackdrop onClose={onClose} maxWidthClassName="max-w-lg">
+      {/* Header */}
+      <div className="flex items-center justify-between border-b border-gray-alpha-300 px-5 py-4">
+        <div className="min-w-0">
+          <h2 className="font-sans text-sm font-semibold text-gray-1000">
+            Balasan
+          </h2>
+          <p className="mt-0.5 truncate font-sans text-xs text-gray-700">
+            untuk komentar {parentComment.name}
+            <br />
+            {formatRelativeTime(parentComment.createdAt)}
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label="Tutup"
+          className="flex h-7 w-7 shrink-0 items-center justify-center rounded-sm text-gray-700 transition-colors hover:bg-gray-alpha-100 hover:text-gray-1000">
+          <X className="h-4 w-4" strokeWidth={2} />
+        </button>
+      </div>
+
+      {/* Original comment, for context */}
+      <div className="border-b border-gray-alpha-300 px-5 py-3">
+        <div className="flex gap-3">
+          <CommentAvatar
+            name={parentComment.name}
+            imageUrl={parentComment.imageUrl}
+            size="sm"
+          />
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-1.5">
+              <span className="truncate font-sans text-xs font-medium text-gray-1000">
+                {parentComment.name}
+              </span>
+              {parentComment.isAdminReply && <DeveloperBadge />}
+            </div>
+            <p className="mt-0.5 text-sm leading-6 text-gray-900 whitespace-pre-wrap wrap-break-word">
+              {parentComment.message}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Reply list */}
+      <div className="max-h-72 space-y-2 overflow-y-auto scrollbar-thin px-5 py-4">
+        {replies.length === 0 ? (
+          <p className="py-4 text-center text-xs text-gray-700">
+            Belum ada balasan. Jadi yang pertama!
+          </p>
+        ) : (
+          <AnimatePresence initial={false}>
+            {replies.map((reply) => (
+              <motion.div
+                key={reply.id}
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.97 }}
+                transition={{ duration: 0.2 }}>
+                <ReplyRow
+                  reply={reply}
+                  isOwn={reply.guestId === guestId}
+                  isReplyTarget={reply.id === replyTargetId}
+                  onUpdated={onReplyUpdated}
+                  onDeleted={onReplyDeleted}
+                  onReplyToThis={(target) => setReplyTargetId(target.id)}
+                />
+              </motion.div>
+            ))}
+          </AnimatePresence>
+        )}
+      </div>
+
+      {/* Reply form */}
+      <form
+        onSubmit={handleSubmit}
+        className="space-y-2.5 border-t border-gray-alpha-300 px-5 py-4">
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept={IMAGE_UPLOAD_RULES.acceptAttr}
+          onChange={(e) => handleAvatarSelect(e.target.files?.[0])}
+          className="hidden"
+          id="reply-avatar-input"
+        />
+
+        <div className="flex items-center gap-2.5">
+          <label
+            htmlFor="reply-avatar-input"
+            className="relative shrink-0 cursor-pointer group">
+            {avatarPreviewUrl ? (
+              <>
+                <img
+                  src={avatarPreviewUrl}
+                  alt="Preview avatar"
+                  className="h-9 w-9 rounded-full object-cover border border-gray-alpha-400 transition-opacity group-hover:opacity-75"
+                />
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    handleRemoveAvatar();
+                  }}
+                  className="absolute -top-1 -right-1 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-gray-1000 text-background-100 shadow-raised">
+                  <X className="h-2 w-2" strokeWidth={2.5} />
+                </button>
+              </>
+            ) : (
+              <div
+                className={`h-9 w-9 rounded-full border border-dashed border-gray-alpha-400 flex items-center justify-center transition-colors group-hover:border-gray-alpha-600 group-hover:bg-gray-alpha-100 ${
+                  previewName !== "?"
+                    ? getAvatarPalette(previewName).bg
+                    : "bg-background-100"
+                }`}>
+                {previewName !== "?" ? (
+                  <span
+                    className={`font-mono text-xs font-semibold ${getAvatarPalette(previewName).text}`}>
+                    {previewName.charAt(0).toUpperCase()}
+                  </span>
+                ) : (
+                  <UserRound
+                    className="h-3.5 w-3.5 text-gray-500"
+                    strokeWidth={1.75}
+                  />
+                )}
+              </div>
+            )}
+          </label>
+
+          <input
+            type="text"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder={COPY.namePlaceholder}
+            required
+            maxLength={60}
+            className="flex-1 rounded-sm border border-gray-alpha-400 bg-background-100 px-3 py-2 font-sans text-sm text-gray-1000 outline-none focus-visible:border-blue-700"
+          />
+        </div>
+
+        {avatarError && (
+          <p className="text-xs text-red-700 pl-11.5">{avatarError}</p>
+        )}
+
+        {isTargetingReply && (
+          <div className="flex items-center justify-between gap-2 rounded-sm border border-blue-300 bg-blue-100 px-3 py-1.5">
+            <p className="min-w-0 truncate font-sans text-xs text-blue-800">
+              Membalas <span className="font-medium">{replyTarget.name}</span>
+              <span className="text-blue-700"> — {replyTarget.message}</span>
+            </p>
+            <button
+              type="button"
+              onClick={() => setReplyTargetId(parentComment.id)}
+              aria-label="Batal membalas, kembali ke komentar utama"
+              className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-blue-700 transition-colors hover:bg-blue-300 hover:text-blue-800">
+              <X className="h-3 w-3" strokeWidth={2.5} />
+            </button>
+          </div>
+        )}
+
+        <textarea
+          value={message}
+          onChange={(e) => setMessage(e.target.value)}
+          placeholder={
+            isTargetingReply ? `Balas ${replyTarget.name}…` : "Tulis balasan…"
+          }
+          required
+          rows={3}
+          maxLength={500}
+          className="w-full resize-none rounded-sm border border-gray-alpha-400 bg-background-100 px-3 py-2 font-sans text-sm text-gray-1000 outline-none focus-visible:border-blue-700"
+        />
+
+        {submitError && <p className="text-xs text-red-700">{submitError}</p>}
+
+        <div className="flex justify-end">
+          <button
+            type="submit"
+            disabled={isSubmitting || !canSubmit}
+            className="flex h-9 items-center gap-1.5 rounded-sm bg-gray-1000 px-4 font-sans text-sm font-medium text-background-100 transition-opacity hover:opacity-85 disabled:opacity-60">
+            {isSubmitting && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+            {isSubmitting ? "Mengirim…" : "Kirim balasan"}
+          </button>
+        </div>
+      </form>
+    </ModalBackdrop>
+  );
+}
+
 // ─── CommentItem ──────────────────────────────────────────────────────────────
 
 function CommentItem({
   comment,
   isOwn,
+  replyCount,
   onUpdated,
   onDeleted,
+  onOpenReplies,
 }: {
   comment: Comment;
   isOwn: boolean;
+  replyCount: number;
   onUpdated: (comment: Comment) => void;
   onDeleted: (id: string) => void;
+  onOpenReplies: () => void;
 }) {
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -394,9 +829,12 @@ function CommentItem({
         <div className="flex items-start gap-3">
           <CommentAvatar name={comment.name} imageUrl={comment.imageUrl} />
           <div className="min-w-0 flex-1">
-            <span className="truncate font-sans text-sm font-medium text-gray-1000">
-              {comment.name}
-            </span>
+            <div className="flex flex-wrap items-center gap-1.5">
+              <span className="truncate font-sans text-sm font-medium text-gray-1000">
+                {comment.name}
+              </span>
+              {comment.isAdminReply && <DeveloperBadge />}
+            </div>
             <p className="text-xs text-gray-700">
               {formatRelativeTime(comment.createdAt)}
               {comment.updatedAt && " · diedit"}
@@ -405,28 +843,40 @@ function CommentItem({
         </div>
 
         <div className="flex-1 overflow-y-auto scrollbar-thin">
-          <p className="text-sm leading-6 text-gray-900">{comment.message}</p>
+          <p className="text-sm leading-6 text-gray-900 whitespace-pre-wrap wrap-break-word">
+            {comment.message}
+          </p>
         </div>
 
-        {isOwn && (
-          <div className="mt-auto flex items-center gap-3 border-t border-gray-alpha-300 pt-3">
-            <button
-              type="button"
-              onClick={() => setShowEditModal(true)}
-              className="flex items-center gap-1 font-sans text-xs text-gray-700 hover:text-gray-1000">
-              <Pencil className="h-3 w-3" strokeWidth={2} />
-              {COPY.editLabel}
-            </button>
+        <div className="mt-auto flex items-center gap-3 border-t border-gray-alpha-300 pt-3">
+          <button
+            type="button"
+            onClick={onOpenReplies}
+            className="flex items-center gap-1 font-sans text-xs text-gray-700 hover:text-gray-1000">
+            <MessageCircle className="h-3 w-3" strokeWidth={2} />
+            {replyCount > 0 ? `Balas (${replyCount})` : "Balas"}
+          </button>
 
-            <button
-              type="button"
-              onClick={() => setShowDeleteModal(true)}
-              className="flex items-center gap-1 font-sans text-xs text-gray-700 hover:text-red-700">
-              <Trash2 className="h-3 w-3" strokeWidth={2} />
-              {COPY.deleteLabel}
-            </button>
-          </div>
-        )}
+          {isOwn && (
+            <>
+              <button
+                type="button"
+                onClick={() => setShowEditModal(true)}
+                className="flex items-center gap-1 font-sans text-xs text-gray-700 hover:text-gray-1000">
+                <Pencil className="h-3 w-3" strokeWidth={2} />
+                {COPY.editLabel}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setShowDeleteModal(true)}
+                className="flex items-center gap-1 font-sans text-xs text-gray-700 hover:text-red-700">
+                <Trash2 className="h-3 w-3" strokeWidth={2} />
+                {COPY.deleteLabel}
+              </button>
+            </>
+          )}
+        </div>
       </div>
     </>
   );
@@ -442,6 +892,9 @@ export function CommentSection() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [guestId, setGuestId] = useState<string | null>(null);
+  const [activeReplyParentId, setActiveReplyParentId] = useState<string | null>(
+    null,
+  );
 
   // Avatar/foto profil state
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
@@ -463,6 +916,57 @@ export function CommentSection() {
       if (avatarPreviewUrl) URL.revokeObjectURL(avatarPreviewUrl);
     };
   }, [avatarPreviewUrl]);
+
+  // Top-level comments (no parent), newest first — order comes from the
+  // API (sorted by createdAt desc). Replies are anything with a parentId,
+  // flattened per top-level ancestor regardless of reply-depth, sorted
+  // oldest -> newest so the thread reads top to bottom like a chat.
+  const topLevelComments = useMemo(
+    () => comments.filter((c) => c.parentId === null),
+    [comments],
+  );
+
+  const repliesByTopLevelId = useMemo(() => {
+    const topLevelIds = new Set(topLevelComments.map((c) => c.id));
+    const byId = new Map(comments.map((c) => [c.id, c]));
+
+    function findTopLevelAncestorId(comment: Comment): string | null {
+      let current: Comment | undefined = comment;
+      const seen = new Set<string>();
+      while (current?.parentId) {
+        if (seen.has(current.id)) return null; // guard against bad data loops
+        seen.add(current.id);
+        if (topLevelIds.has(current.parentId)) return current.parentId;
+        current = byId.get(current.parentId);
+      }
+      return null;
+    }
+
+    const map = new Map<string, Comment[]>();
+    for (const comment of comments) {
+      if (comment.parentId === null) continue;
+      const ancestorId = findTopLevelAncestorId(comment);
+      if (!ancestorId) continue;
+      const bucket = map.get(ancestorId) ?? [];
+      bucket.push(comment);
+      map.set(ancestorId, bucket);
+    }
+    for (const bucket of map.values()) {
+      bucket.sort(
+        (a, b) =>
+          new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+      );
+    }
+    return map;
+  }, [comments, topLevelComments]);
+
+  const activeReplyParent = useMemo(
+    () => comments.find((c) => c.id === activeReplyParentId) ?? null,
+    [comments, activeReplyParentId],
+  );
+  const activeReplies = activeReplyParentId
+    ? (repliesByTopLevelId.get(activeReplyParentId) ?? [])
+    : [];
 
   function handleAvatarSelect(file: File | undefined) {
     if (!file) return;
@@ -520,7 +1024,36 @@ export function CommentSection() {
   }
 
   function handleDeleted(id: string) {
-    setComments((prev) => prev.filter((c) => c.id !== id));
+    // Deleting a top-level comment cascades server-side to its whole
+    // reply subtree, so drop any comment that was that id OR had it
+    // (transitively) as an ancestor. Simplest safe client-side mirror:
+    // just refilter out anything no longer reachable — but since we
+    // don't want another round trip, we conservatively drop the id
+    // itself plus direct/indirect children we already know about.
+    setComments((prev) => {
+      const removedIds = new Set<string>([id]);
+      // Repeatedly sweep for children of anything already removed, so
+      // reply-of-reply chains are fully cleaned up too.
+      let changed = true;
+      while (changed) {
+        changed = false;
+        for (const c of prev) {
+          if (
+            c.parentId &&
+            removedIds.has(c.parentId) &&
+            !removedIds.has(c.id)
+          ) {
+            removedIds.add(c.id);
+            changed = true;
+          }
+        }
+      }
+      return prev.filter((c) => !removedIds.has(c.id));
+    });
+
+    if (activeReplyParentId && activeReplyParentId === id) {
+      setActiveReplyParentId(null);
+    }
   }
 
   // Preview avatar di form — nama fallback ke inisial kalau belum diisi
@@ -641,7 +1174,7 @@ export function CommentSection() {
             <CommentSkeleton />
             <CommentSkeleton />
           </div>
-        ) : comments.length === 0 ? (
+        ) : topLevelComments.length === 0 ? (
           <p className="py-6 text-center text-sm text-gray-800">
             {COPY.emptyState}
           </p>
@@ -649,7 +1182,7 @@ export function CommentSection() {
           <div className="max-h-86 overflow-y-auto scrollbar-thin rounded-md border border-gray-alpha-300 bg-background-200 p-3 sm:p-4">
             <div className="grid gap-3 sm:grid-cols-2">
               <AnimatePresence initial={false}>
-                {comments.map((comment, index) => (
+                {topLevelComments.map((comment, index) => (
                   <motion.div
                     key={comment.id}
                     initial={{ opacity: 0, y: 8 }}
@@ -662,8 +1195,12 @@ export function CommentSection() {
                     <CommentItem
                       comment={comment}
                       isOwn={comment.guestId === guestId}
+                      replyCount={
+                        repliesByTopLevelId.get(comment.id)?.length ?? 0
+                      }
                       onUpdated={handleUpdated}
                       onDeleted={handleDeleted}
+                      onOpenReplies={() => setActiveReplyParentId(comment.id)}
                     />
                   </motion.div>
                 ))}
@@ -672,6 +1209,20 @@ export function CommentSection() {
           </div>
         )}
       </div>
+
+      {activeReplyParent && (
+        <ReplyModal
+          parentComment={activeReplyParent}
+          replies={activeReplies}
+          guestId={guestId}
+          onClose={() => setActiveReplyParentId(null)}
+          onReplyCreated={(created) =>
+            setComments((prev) => [...prev, created])
+          }
+          onReplyUpdated={handleUpdated}
+          onReplyDeleted={handleDeleted}
+        />
+      )}
     </div>
   );
 }

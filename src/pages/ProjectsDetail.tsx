@@ -8,6 +8,10 @@ import { projectsApi, type Project } from "@/lib/api/projects";
 import * as SiIcons from "react-icons/si";
 import type { IconType } from "react-icons";
 import { Title } from "@/components/common/Title";
+import {
+  RelatedProjects,
+  getRelatedProjects,
+} from "@/components/projects/RelatedProjects";
 
 function resolveTechIcon(iconKey: string): IconType | null {
   return (SiIcons as Record<string, IconType>)[iconKey] ?? null;
@@ -45,6 +49,7 @@ export function ProjectDetail() {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
   const [project, setProject] = useState<Project | null>(null);
+  const [allProjects, setAllProjects] = useState<Project[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const [activeImage, setActiveImage] = useState(0);
@@ -59,6 +64,13 @@ export function ProjectDetail() {
       .then(setProject)
       .catch(() => setNotFound(true))
       .finally(() => setIsLoading(false));
+
+    // Fetch list terpisah buat related projects — nggak blocking isLoading
+    // utama, gagal diam-diam aja (nggak kritikal buat halaman ini).
+    projectsApi
+      .list()
+      .then(setAllProjects)
+      .catch(() => setAllProjects([]));
   }, [slug]);
 
   if (isLoading) return <DetailSkeleton />;
@@ -78,8 +90,8 @@ export function ProjectDetail() {
   }
 
   const { details, private: isPrivate, category } = project;
-
   const isMobile = category === "mobile";
+  const relatedProjects = getRelatedProjects(allProjects, project);
 
   function handleDemoClick() {
     if (!details.demo?.href) {
@@ -113,7 +125,7 @@ export function ProjectDetail() {
         </button>
       </motion.div>
 
-      {/* Header */}
+      {/* Header — demo/repo buttons dipindah ke bawah, di sini cuma title */}
       <motion.div
         initial="hidden"
         animate="visible"
@@ -123,165 +135,180 @@ export function ProjectDetail() {
           delay: 0.05,
           ease: [0.175, 0.885, 0.32, 1.1],
         }}
-        className="mt-6 flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2">
-            <span className="h-1.5 w-1.5 rounded-full bg-blue-700" />
-            <span className="font-sans text-xs font-medium uppercase tracking-wide text-gray-900">
-              Projects
+        className="mt-6">
+        <div className="flex items-center gap-2">
+          <span className="h-1.5 w-1.5 rounded-full bg-blue-700" />
+          <span className="font-sans text-xs font-medium uppercase tracking-wide text-gray-900">
+            Projects
+          </span>
+          {isPrivate && (
+            <span className="flex items-center gap-1 rounded-full border border-gray-alpha-400 bg-background-200 px-2 py-0.5 font-mono text-[10px] text-gray-700">
+              <Lock className="h-2.5 w-2.5" strokeWidth={2} />
+              private
             </span>
-            {isPrivate && (
-              <span className="flex items-center gap-1 rounded-full border border-gray-alpha-400 bg-background-200 px-2 py-0.5 font-mono text-[10px] text-gray-700">
-                <Lock className="h-2.5 w-2.5" strokeWidth={2} />
-                private
-              </span>
-            )}
-          </div>
-          <h1 className="mt-3 text-3xl font-semibold tracking-[-1.28px] text-gray-1000 sm:text-4xl sm:tracking-[-2.4px]">
-            {details.title}
-          </h1>
-        </div>
-        <div className="flex flex-wrap items-center gap-2 pt-1">
-          {isMobile ? (
-            <button
-              onClick={handleDemoClick}
-              className="flex h-9 items-center gap-1.5 rounded-sm bg-gray-1000 px-4 font-sans text-sm font-medium text-background-100 transition-opacity hover:opacity-85">
-              <Download className="h-3.5 w-3.5" strokeWidth={2} />
-              {details.demo?.href ? "Download APK" : "Not available"}
-            </button>
-          ) : (
-            <button
-              onClick={handleDemoClick}
-              className="flex h-9 items-center gap-1.5 rounded-sm bg-gray-1000 px-4 font-sans text-sm font-medium text-background-100 transition-opacity hover:opacity-85">
-              <ExternalLink className="h-3.5 w-3.5" strokeWidth={2} />
-              {details.demo?.href ? "Live demo" : "No demo"}
-            </button>
-          )}
-          {details.repo?.href && (
-            <a
-              href={details.repo.href}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex h-9 items-center gap-1.5 rounded-sm border border-gray-alpha-400 bg-background-100 px-4 font-sans text-sm font-medium text-gray-1000 transition-colors hover:bg-gray-100">
-              <FaGithub className="h-3.5 w-3.5" />
-              Repository
-            </a>
           )}
         </div>
+        <h1 className="mt-3 text-3xl font-semibold tracking-[-1.28px] text-gray-1000 sm:text-4xl sm:tracking-[-2.4px]">
+          {details.title}
+        </h1>
       </motion.div>
 
-      {/* Images */}
-      <motion.div
-        initial="hidden"
-        animate="visible"
-        variants={fadeUp}
-        transition={{
-          duration: 0.4,
-          delay: 0.1,
-          ease: [0.175, 0.885, 0.32, 1.1],
-        }}
-        className="mt-8">
-        {isMobile ? (
-          <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-thin">
-            {details.images.map((img, i) => (
-              <button
-                key={i}
-                onClick={() => setActiveImage(i)}
-                className={`relative shrink-0 overflow-hidden rounded-md border-2 transition-all duration-300 ${
-                  i === activeImage
-                    ? "h-120 w-55 border-blue-700 shadow-modal"
-                    : "h-80 w-36.75 border-gray-alpha-300 opacity-60 hover:opacity-80"
-                }`}>
-                <img
-                  src={img}
-                  alt={`${details.title} screen ${i + 1}`}
-                  className="h-full w-full object-cover"
-                />
-              </button>
-            ))}
-          </div>
-        ) : (
-          <>
-            <div className="overflow-hidden rounded-md border border-gray-alpha-400 bg-gray-100">
-              <img
-                src={details.images[activeImage]}
-                alt={`${details.title} screenshot ${activeImage + 1}`}
-                className="h-full w-full object-cover"
-              />
-            </div>
-            {details.images.length > 1 && (
-              <div className="mt-3 flex gap-2 overflow-x-auto pb-1 scrollbar-thin">
+      {/* ─── 2-column layout: main content (kiri) + related projects (kanan) ─── */}
+      <div className="mt-8 grid grid-cols-1 gap-10 lg:grid-cols-[1fr_320px]">
+        {/* ── Kolom kiri: images, description, tech stack, actions ── */}
+        <div className="min-w-0">
+          {/* Images */}
+          <motion.div
+            initial="hidden"
+            animate="visible"
+            variants={fadeUp}
+            transition={{
+              duration: 0.4,
+              delay: 0.1,
+              ease: [0.175, 0.885, 0.32, 1.1],
+            }}>
+            {isMobile ? (
+              <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-thin">
                 {details.images.map((img, i) => (
                   <button
                     key={i}
                     onClick={() => setActiveImage(i)}
-                    className={`relative h-16 w-24 shrink-0 overflow-hidden rounded-sm border-2 transition-colors ${
+                    className={`relative shrink-0 overflow-hidden rounded-md border-2 transition-all duration-300 ${
                       i === activeImage
-                        ? "border-blue-700"
-                        : "border-gray-alpha-300 hover:border-gray-alpha-500"
+                        ? "h-120 w-55 border-blue-700 shadow-modal"
+                        : "h-80 w-36.75 border-gray-alpha-300 opacity-60 hover:opacity-80"
                     }`}>
                     <img
                       src={img}
-                      alt={`Thumbnail ${i + 1}`}
+                      alt={`${details.title} screen ${i + 1}`}
                       className="h-full w-full object-cover"
                     />
                   </button>
                 ))}
               </div>
+            ) : (
+              <>
+                <div className="overflow-hidden rounded-md border border-gray-alpha-400 bg-gray-100">
+                  <img
+                    src={details.images[activeImage]}
+                    alt={`${details.title} screenshot ${activeImage + 1}`}
+                    className="h-full w-full object-cover"
+                  />
+                </div>
+                {details.images.length > 1 && (
+                  <div className="mt-3 flex gap-2 overflow-x-auto pb-1 scrollbar-thin">
+                    {details.images.map((img, i) => (
+                      <button
+                        key={i}
+                        onClick={() => setActiveImage(i)}
+                        className={`relative h-16 w-24 shrink-0 overflow-hidden rounded-sm border-2 transition-colors ${
+                          i === activeImage
+                            ? "border-blue-700"
+                            : "border-gray-alpha-300 hover:border-gray-alpha-500"
+                        }`}>
+                        <img
+                          src={img}
+                          alt={`Thumbnail ${i + 1}`}
+                          className="h-full w-full object-cover"
+                        />
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </>
             )}
-          </>
-        )}
-      </motion.div>
+          </motion.div>
 
-      {/* Description */}
-      <motion.div
-        initial="hidden"
-        animate="visible"
-        variants={fadeUp}
-        transition={{
-          duration: 0.4,
-          delay: 0.15,
-          ease: [0.175, 0.885, 0.32, 1.1],
-        }}
-        className="mt-10 max-w-200 border-t border-gray-alpha-400 pt-10">
-        <h2 className="font-sans text-sm font-medium uppercase tracking-wide text-gray-800">
-          About this project
-        </h2>
-        <p className="mt-4 text-base leading-7 text-gray-900 sm:text-lg sm:leading-8">
-          {details.description}
-        </p>
-      </motion.div>
+          {/* Description */}
+          <motion.div
+            initial="hidden"
+            animate="visible"
+            variants={fadeUp}
+            transition={{
+              duration: 0.4,
+              delay: 0.15,
+              ease: [0.175, 0.885, 0.32, 1.1],
+            }}
+            className="mt-10 border-t border-gray-alpha-400 pt-10">
+            <h2 className="font-sans text-sm font-medium uppercase tracking-wide text-gray-800">
+              About this project
+            </h2>
+            <p className="mt-4 text-base leading-7 text-gray-900 sm:text-lg sm:leading-8">
+              {details.description}
+            </p>
+          </motion.div>
 
-      {/* Tech stack */}
-      {details.techStack && details.techStack.length > 0 && (
-        <motion.div
-          initial="hidden"
-          animate="visible"
-          variants={fadeUp}
-          transition={{
-            duration: 0.4,
-            delay: 0.2,
-            ease: [0.175, 0.885, 0.32, 1.1],
-          }}
-          className="mt-10 max-w-200 border-t border-gray-alpha-400 pt-10">
-          <h2 className="font-sans text-sm font-medium uppercase tracking-wide text-gray-800">
-            Tech stack
-          </h2>
-          <div className="mt-4 flex flex-wrap gap-2">
-            {details.techStack.map((tech, i) => {
-              const Icon = resolveTechIcon(tech.icon);
-              return (
-                <span
-                  key={i}
-                  className="flex items-center gap-1.5 rounded-full border border-gray-alpha-400 bg-background-100 px-3 py-1.5 font-sans text-sm text-gray-900">
-                  {Icon && <Icon className="h-4 w-4" />}
-                  {tech.name}
-                </span>
-              );
-            })}
-          </div>
-        </motion.div>
-      )}
+          {/* Tech stack + actions (demo/repo) sejajar di baris yang sama */}
+          <motion.div
+            initial="hidden"
+            animate="visible"
+            variants={fadeUp}
+            transition={{
+              duration: 0.4,
+              delay: 0.2,
+              ease: [0.175, 0.885, 0.32, 1.1],
+            }}
+            className="mt-10 flex flex-wrap items-end justify-between gap-6 border-t border-gray-alpha-400 pt-10">
+            {/* Tech stack */}
+            {details.techStack && details.techStack.length > 0 ? (
+              <div>
+                <h2 className="font-sans text-sm font-medium uppercase tracking-wide text-gray-800">
+                  Tech stack
+                </h2>
+                <div className="mt-4 flex flex-wrap gap-2">
+                  {details.techStack.map((tech, i) => {
+                    const Icon = resolveTechIcon(tech.icon);
+                    return (
+                      <span
+                        key={i}
+                        className="flex items-center gap-1.5 rounded-full border border-gray-alpha-400 bg-background-100 px-3 py-1.5 font-sans text-sm text-gray-900">
+                        {Icon && <Icon className="h-4 w-4" />}
+                        {tech.name}
+                      </span>
+                    );
+                  })}
+                </div>
+              </div>
+            ) : (
+              <div />
+            )}
+
+            {/* Demo / Repo buttons — dulunya di header, sekarang di sini */}
+            <div className="flex flex-wrap items-center gap-2">
+              {isMobile ? (
+                <button
+                  onClick={handleDemoClick}
+                  className="flex h-9 items-center gap-1.5 rounded-sm bg-gray-1000 px-4 font-sans text-sm font-medium text-background-100 transition-opacity hover:opacity-85">
+                  <Download className="h-3.5 w-3.5" strokeWidth={2} />
+                  {details.demo?.href ? "Download APK" : "Not available"}
+                </button>
+              ) : (
+                <button
+                  onClick={handleDemoClick}
+                  className="flex h-9 items-center gap-1.5 rounded-sm bg-gray-1000 px-4 font-sans text-sm font-medium text-background-100 transition-opacity hover:opacity-85">
+                  <ExternalLink className="h-3.5 w-3.5" strokeWidth={2} />
+                  {details.demo?.href ? "Live demo" : "No demo"}
+                </button>
+              )}
+              {details.repo?.href && (
+                <a
+                  href={details.repo.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex h-9 items-center gap-1.5 rounded-sm border border-gray-alpha-400 bg-background-100 px-4 font-sans text-sm font-medium text-gray-1000 transition-colors hover:bg-gray-100">
+                  <FaGithub className="h-3.5 w-3.5" />
+                  Repository
+                </a>
+              )}
+            </div>
+          </motion.div>
+        </div>
+
+        {/* ── Kolom kanan: related projects — sticky di desktop, stack di bawah pas mobile ── */}
+        <div className="lg:sticky lg:top-24 lg:self-start">
+          <RelatedProjects projects={relatedProjects} category={category} />
+        </div>
+      </div>
     </section>
   );
 }
